@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#080B1A">
+<title>SOCIOLOGY ’85 – The Socialization Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080B1A;--bg2:#211044;--cyan:#36F5FF;--mag:#FF3CAC;--lila:#A970FF;--yel:#FFE66D;
+  --txt:#F4F1DE;--ok:#66FF99;--err:#FF5D73;--orange:#FF9F45;--muted:#C9C3E6;
+  --accent:#36F5FF;--glow:rgba(54,245,255,.45);--panel:rgba(14,11,38,.93);
+  --pix:"Press Start 2P","Courier New",monospace;
+  --vt:"VT323","Courier New",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#080B1A;--txt:#F4F1DE}}
+:root[data-theme="dark"]{--bg:#080B1A;--txt:#F4F1DE}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;background:var(--bg);scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg);color:var(--txt);font:18px/1.5 var(--sans);overflow:hidden;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer;-webkit-user-select:none;user-select:none}
+button:focus-visible{outline:3px solid var(--yel);outline-offset:3px}
+p{margin:0 0 .7em}
+
+/* ---------- Hintergrund ---------- */
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at 50% 8%,var(--bg2) 0%,var(--bg) 68%)}
+.star{position:absolute;width:2px;height:2px;background:#fff;opacity:.55}
+.star.tw{animation:tw 5s ease-in-out infinite}
+@keyframes tw{50%{opacity:.12}}
+.horizon{position:absolute;left:0;right:0;bottom:38%;height:2px;background:var(--accent);opacity:.45;box-shadow:0 0 14px var(--accent)}
+.grid-wrap{position:absolute;left:-60%;right:-60%;bottom:0;height:38%;perspective:260px;perspective-origin:50% 0%;overflow:hidden}
+.grid{position:absolute;left:0;right:0;top:0;height:240%;transform:rotateX(64deg);transform-origin:50% 0%;
+  background-image:linear-gradient(var(--accent) 1px,transparent 1px),linear-gradient(90deg,var(--accent) 1px,transparent 1px);
+  background-size:64px 64px;opacity:.2;animation:gridmove 5s linear infinite}
+@keyframes gridmove{to{background-position:0 64px}}
+#scan{position:fixed;inset:0;z-index:70;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.14) 0,rgba(0,0,0,.14) 1px,transparent 1px,transparent 3px)}
+
+/* ---------- Grundgerüst ---------- */
+#app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+#screen{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:16px 16px 40px}
+.wrap{max-width:1180px;margin:0 auto}
+.pix{font-family:var(--pix);line-height:1.35;letter-spacing:.5px}
+.vt{font-family:var(--vt)}
+.dim{color:var(--muted)}
+.small{font-size:16px;color:var(--muted)}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:58px;padding:10px 22px;font-family:var(--vt);font-size:27px;line-height:1;letter-spacing:1px;
+  background:rgba(8,11,26,.86);border:3px solid var(--accent);color:var(--txt);border-radius:4px;box-shadow:0 0 10px var(--glow),inset 0 0 8px var(--glow);text-align:center}
+.btn:active{transform:translateY(2px)}
+.btn.primary{background:var(--accent);color:#080B1A}
+.btn.ghost{border-color:rgba(244,241,222,.4);box-shadow:none}
+.btn[disabled]{opacity:.38;cursor:default;box-shadow:none;transform:none}
+.menu{display:flex;flex-direction:column;gap:14px;width:min(440px,100%)}
+
+/* ---------- Startbildschirm ---------- */
+.center{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:20px;padding:12px 0}
+.logo{font-family:var(--pix);font-size:clamp(28px,6.6vw,70px);line-height:1.15;margin:0;color:var(--txt);
+  text-shadow:4px 4px 0 var(--mag),-3px -3px 0 var(--cyan),0 0 28px rgba(54,245,255,.45)}
+.logo span{display:inline-block;animation:pixin .55s steps(4) both}
+@keyframes pixin{from{opacity:0;transform:scale(1.8)}to{opacity:1;transform:none}}
+.subtitle{font-family:var(--pix);font-size:clamp(11px,2.1vw,19px);color:var(--yel);letter-spacing:2px;margin:0}
+.coin{font-family:var(--vt);font-size:clamp(24px,3.4vw,34px);color:var(--mag);animation:breathe 2.6s ease-in-out infinite;margin:0}
+@keyframes breathe{50%{opacity:.4}}
+.footnote{font-size:15px;color:var(--muted);max-width:520px}
+.cab{border:3px solid var(--accent);border-radius:10px;padding:clamp(18px,4vw,42px);background:rgba(8,11,26,.6);box-shadow:0 0 24px var(--glow),inset 0 0 30px rgba(33,16,68,.8);max-width:900px;width:100%}
+
+/* ---------- Weltkarte ---------- */
+.maphead{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+.maphead h1{font-family:var(--pix);font-size:clamp(18px,3vw,28px);margin:0;color:var(--accent);text-shadow:0 0 12px var(--glow)}
+.rankbox{font-family:var(--vt);font-size:24px;line-height:1.2;text-align:right}
+.rankbox b{font-family:var(--pix);font-size:15px;color:var(--yel);font-weight:normal}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{--c:var(--cyan);position:relative;display:flex;flex-direction:column;gap:10px;padding:20px;border:3px solid var(--c);border-radius:8px;background:var(--panel);box-shadow:0 0 16px var(--cg,rgba(54,245,255,.35))}
+.card h2{font-family:var(--pix);font-size:clamp(15px,2vw,19px);margin:0;color:var(--c)}
+.card .who{font-family:var(--vt);font-size:25px;line-height:1.1}
+.card .desc{font-size:17px;flex:1}
+.status{align-self:flex-start;font-family:var(--vt);font-size:21px;padding:2px 10px;border:2px solid var(--c);color:var(--c)}
+.status.done{border-color:var(--ok);color:var(--ok)}
+.card.locked{filter:grayscale(.85);opacity:.6;box-shadow:none}
+.card.boss{grid-column:1/-1;--c:var(--yel);--cg:rgba(255,230,109,.35)}
+.card .btn{width:100%}
+.minibars{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0}
+.mb{font-size:16px}
+.mb .bar{margin-top:4px}
+.bar{height:14px;border:2px solid var(--c,var(--accent));background:rgba(255,255,255,.04)}
+.bar>i{display:block;height:100%;background:var(--c,var(--accent))}
+.maptools{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+.maptools .btn{flex:1 1 200px}
+
+/* ---------- HUD ---------- */
+#hud{display:none;position:relative;z-index:5;background:rgba(8,11,26,.94);border-bottom:2px solid var(--accent);box-shadow:0 0 14px var(--glow)}
+body.playing #hud{display:block}
+.hud-in{max-width:1180px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:10px}
+.ib{flex:none;min-width:50px;min-height:50px;padding:0 10px;font-family:var(--vt);font-size:26px;background:transparent;border:2px solid rgba(244,241,222,.4);border-radius:4px}
+.hud-t{flex:1;min-width:0;font-family:var(--vt);font-size:24px;line-height:1.05}
+.hud-t #hudWorld{color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-s{text-align:right;flex:none}
+.hud-s .lbl{font-family:var(--vt);font-size:18px;color:var(--muted);line-height:1}
+.score{font-family:var(--pix);font-size:16px;color:var(--yel)}
+.prog-row{padding-top:0;padding-bottom:10px}
+.prog{flex:1;display:flex;gap:5px}
+.seg{flex:1;height:12px;border:2px solid var(--accent);opacity:.6}
+.seg.cur{opacity:1;box-shadow:0 0 8px var(--glow)}
+.seg.done{background:var(--ok);border-color:var(--ok);opacity:1}
+.seg.miss{background:var(--yel);border-color:var(--yel);opacity:.85}
+.seg.rv{border-style:dashed}
+#hudLeft{font-family:var(--vt);font-size:20px;white-space:nowrap}
+
+/* ---------- Aufgaben ---------- */
+.tg{display:grid;gap:16px}
+@media (min-width:900px) and (orientation:landscape){.tg{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}}
+.scene{border:2px solid rgba(244,241,222,.15);border-radius:6px;background:rgba(8,11,26,.55);padding:8px 10px 4px;margin-bottom:14px}
+.scene svg{display:block;width:100%;height:auto;max-height:128px}
+.scene-cap{font-family:var(--vt);font-size:20px;color:var(--muted);text-align:right}
+.panel{background:var(--panel);border:2px solid var(--accent);border-radius:6px;padding:18px;box-shadow:0 0 14px var(--glow)}
+.stage{font-family:var(--vt);font-size:23px;color:var(--accent);line-height:1.1;margin-bottom:6px}
+.situation{background:rgba(255,255,255,.05);border-left:4px solid var(--yel);padding:12px 14px;margin:10px 0;font-size:18px}
+.question{font-size:19px;font-weight:600;margin:12px 0}
+.instr{font-size:16px;color:var(--muted)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.tbtn{min-height:50px;padding:6px 16px;font-family:var(--vt);font-size:23px;background:transparent;border:2px solid rgba(244,241,222,.38);border-radius:4px}
+.tbtn[disabled]{opacity:.45}
+.hintbox{margin-top:12px;padding:12px 14px;border:2px dashed var(--yel);color:var(--yel);font-size:17px}
+.answers{display:flex;flex-direction:column;gap:12px}
+.opt{display:flex;align-items:flex-start;gap:14px;width:100%;min-height:66px;padding:14px 16px;text-align:left;font-size:18px;line-height:1.42;
+  background:rgba(8,11,26,.9);border:2px solid rgba(244,241,222,.28);border-radius:6px}
+.opt .badge{flex:none;width:36px;height:36px;display:grid;place-items:center;font-family:var(--pix);font-size:13px;border:2px solid var(--accent);color:var(--accent)}
+.opt .ot{flex:1;min-width:0}
+.opt.sel{border-color:var(--accent);background:rgba(255,255,255,.08);box-shadow:0 0 14px var(--glow)}
+.opt.sel .badge{background:var(--accent);color:#080B1A}
+.opt.right{border-color:var(--ok);box-shadow:0 0 14px rgba(102,255,153,.45)}
+.opt.right .badge{border-color:var(--ok);color:var(--ok);background:transparent}
+.opt.wrong{border-color:var(--err)}
+.opt.wrong .badge{border-color:var(--err);color:var(--err);background:transparent}
+.opt.wrong.out{opacity:.55}
+.opt[disabled]{cursor:default}
+.opt .th-name{display:block;font-family:var(--vt);font-size:25px;line-height:1.05}
+.opt .th-sub{display:block;font-size:16px;color:var(--muted)}
+.item.pick{border-color:var(--yel);box-shadow:0 0 14px rgba(255,230,109,.45)}
+.item.pick .badge{border-color:var(--yel);color:var(--yel)}
+.chip{display:inline-block;margin-top:8px;font-family:var(--vt);font-size:21px;line-height:1.1;padding:2px 8px;border:2px solid var(--accent);color:var(--accent)}
+.chip.empty{border-style:dashed;border-color:rgba(244,241,222,.35);color:var(--muted)}
+.chip.okc{border-color:var(--ok);color:var(--ok)}
+.cats{position:sticky;bottom:0;z-index:2;display:flex;flex-wrap:wrap;gap:10px;padding:12px 0 6px;background:linear-gradient(to bottom,rgba(8,11,26,0),rgba(8,11,26,.96) 22%)}
+.cats .btn{flex:1 1 150px;font-size:24px;min-height:58px}
+.check{width:100%;margin-top:14px}
+.fb{margin-top:14px}
+.fb h3{font-family:var(--pix);font-size:clamp(14px,2.3vw,19px);margin:0 0 10px}
+.fb.good{border-color:var(--ok);box-shadow:0 0 16px rgba(102,255,153,.4)}
+.fb.good h3{color:var(--ok)}
+.fb.bad{border-color:var(--err);box-shadow:none}
+.fb.bad h3{color:var(--err)}
+.fb.info{border-color:var(--yel);box-shadow:none}
+.fb.info h3{color:var(--yel)}
+.fb .pts{font-family:var(--vt);font-size:26px;color:var(--yel);margin-bottom:8px}
+.fb .btn{width:100%;margin-top:8px}
+.pulse{animation:pulse 1s ease-in-out 2}
+@keyframes pulse{50%{box-shadow:0 0 30px rgba(102,255,153,.85)}}
+.jolt{animation:jolt .36s steps(3)}
+@keyframes jolt{0%{transform:none}33%{transform:translate(-5px,1px)}66%{transform:translate(4px,-1px)}100%{transform:none}}
+.flow{stroke-dasharray:6 10;animation:flow 1.8s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-32}}
+.jit{animation:jit 2.6s ease-in-out infinite}
+@keyframes jit{50%{transform:translate(2px,-2px)}}
+.float{position:fixed;z-index:80;pointer-events:none;font-family:var(--pix);font-size:18px;color:var(--yel);text-shadow:0 0 10px rgba(255,230,109,.7);animation:floatup 1.1s ease-out forwards}
+@keyframes floatup{to{transform:translateY(-48px);opacity:0}}
+.glitch #screen{animation:glitch .45s steps(3)}
+@keyframes glitch{0%{transform:none;filter:none}30%{transform:translateX(-7px) skewX(-4deg);filter:hue-rotate(50deg)}60%{transform:translateX(6px) skewX(3deg)}85%{transform:translateX(-2px);filter:hue-rotate(-30deg)}100%{transform:none;filter:none}}
+.cf{position:fixed;top:-14px;width:10px;height:10px;z-index:75;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(112vh) rotate(540deg)}}
+
+/* ---------- Level-Ende & Auswertung ---------- */
+.big{font-family:var(--pix);font-size:clamp(20px,4.4vw,40px);margin:0;color:var(--accent);text-shadow:3px 3px 0 var(--mag),0 0 20px var(--glow)}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;width:100%;max-width:820px}
+.stat{border:2px solid rgba(244,241,222,.25);border-radius:6px;padding:12px;background:rgba(8,11,26,.75);text-align:center}
+.stat .n{font-family:var(--pix);font-size:20px;color:var(--yel);display:block;margin-bottom:6px}
+.stat .l{font-size:15px;color:var(--muted)}
+.res{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.res h2{font-family:var(--pix);font-size:clamp(13px,2vw,17px);color:var(--accent);margin:0 0 12px}
+.ranks{display:flex;flex-wrap:wrap;gap:8px}
+.rk{font-family:var(--vt);font-size:22px;padding:4px 12px;border:2px solid rgba(244,241,222,.25);color:var(--muted)}
+.rk.on{border-color:var(--yel);color:var(--yel)}
+.rk.now{background:var(--yel);color:#080B1A}
+.th-row{--c:var(--cyan);padding:12px 0;border-top:1px solid rgba(244,241,222,.12)}
+.th-row:first-of-type{border-top:0}
+.th-row .top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline}
+.th-row .nm{font-family:var(--vt);font-size:25px;color:var(--c)}
+.lv{font-family:var(--vt);font-size:21px;padding:0 8px;border:2px solid currentColor}
+.lv.a{color:var(--ok)}.lv.b{color:var(--yel)}.lv.c{color:var(--err)}.lv.d{color:var(--muted)}
+.res ul{margin:0;padding-left:22px}
+.res li{margin-bottom:6px}
+.linkbtn{background:none;border:0;border-bottom:2px solid var(--accent);color:var(--accent);padding:4px 0;min-height:44px;font-size:17px;text-align:left}
+.resbtns{display:flex;flex-wrap:wrap;gap:12px}
+.resbtns .btn{flex:1 1 230px}
+
+/* ---------- Overlays ---------- */
+#ov{position:fixed;inset:0;z-index:60;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;background:rgba(5,6,18,.9);
+  padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px))}
+#ov.open{display:block}
+.ovbox{max-width:880px;margin:0 auto}
+.ovhead{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-bottom:12px}
+.ovhead h2{font-family:var(--pix);font-size:clamp(15px,2.6vw,22px);color:var(--accent);margin:0}
+.term{font-family:var(--vt);font-size:23px;color:var(--ok);margin:4px 0 12px}
+.cursor{animation:breathe 1.6s steps(2) infinite}
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.tab{--c:var(--cyan);flex:1 1 160px;min-height:54px;font-family:var(--vt);font-size:24px;background:transparent;border:3px solid var(--c);color:var(--c);border-radius:4px}
+.tab.on{background:var(--c);color:#080B1A}
+.thead{font-family:var(--vt);font-size:24px;margin-bottom:10px}
+.dbe{border:2px solid rgba(244,241,222,.2);border-radius:6px;margin-bottom:10px;background:rgba(8,11,26,.85)}
+.dbe.open{border-color:var(--accent)}
+.dbh{width:100%;min-height:56px;text-align:left;padding:10px 14px;background:none;border:0;font-family:var(--vt);font-size:25px}
+.dbb{padding:0 16px 14px;font-size:17px}
+.dbb b{color:var(--accent)}
+.helpbox{background:var(--panel);border:2px solid var(--accent);border-radius:8px;padding:20px}
+.helpbox ul{padding-left:22px;margin:0 0 12px}
+.helpbox li{margin-bottom:8px}
+.confirm{text-align:center;padding-top:10vh}
+.confirm p{font-size:19px;max-width:520px;margin:0 auto 20px}
+.confirm .menu{margin:0 auto}
+
+@media (max-width:520px){
+  body{font-size:17px}
+  .btn{font-size:24px;min-height:54px}
+  .hud-t{font-size:21px}
+  .score{font-size:13px}
+  .question{font-size:18px}
+  .opt{font-size:17px;padding:12px}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div id="bg" aria-hidden="true"><div class="horizon"></div><div class="grid-wrap"><div class="grid"></div></div></div>
+<div id="app">
+  <header id="hud">
+    <div class="hud-in">
+      <button class="ib" data-act="pause" aria-label="Pause">❚❚</button>
+      <div class="hud-t"><div id="hudWorld"></div><div id="hudStage" class="dim"></div></div>
+      <div class="hud-s"><div class="lbl">SCORE</div><div id="hudScore" class="score">0</div></div>
+      <button class="ib" data-act="help" aria-label="Hilfe">?</button>
+      <button class="ib" data-act="sound" id="hudSound" aria-label="Ton an oder aus">🔇</button>
+    </div>
+    <div class="hud-in prog-row"><div id="prog" class="prog" aria-hidden="true"></div><div id="hudLeft" class="dim"></div></div>
+  </header>
+  <main id="screen" aria-live="polite"></main>
+</div>
+<div id="ov" role="dialog" aria-modal="true"></div>
+<div id="scan" aria-hidden="true"></div>
+
+<!-- ================================================================
+     AUFGABEN- UND THEORIEDATEN
+     Lehrkräfte können hier weitere Aufgaben ergänzen.
+     Typen: "mc" (4 Optionen, correct = Index), "compare" (2 Aussagen, correct = Index),
+            "theory" (correct = "parsons" | "dahrendorf" | "mead"),
+            "assign" (items: [{text, cat}], cats: [...])
+     stage 1–5 = Kernaufgaben je Welt, stage 0 = Wiederholungsaufgabe,
+     theory "boss" + solves = Abschlussmission
+     ================================================================ -->
+<script id="task-data">
+window.SOC85_DATA = {
+stages:{0:"Gezielte Wiederholung",1:"Grundverständnis",2:"Begriffserkennung",3:"Anwendung",4:"Fallanalyse",5:"Transfer & Abgrenzung"},
+tagLabels:{
+ "parsons-zwang":"Verinnerlichung vs. bloße Anpassung aus Angst vor Strafe (Parsons)",
+ "parsons-mead":"Abgrenzung Parsons ↔ Mead: Systemstabilität vs. Entwicklung des Selbst",
+ "parsons-begriffe":"Werte, Normen und Institutionen unterscheiden",
+ "intra-inter":"Intra- und Inter-Rollenkonflikt unterscheiden",
+ "position-rolle":"Soziale Position, soziale Rolle und Rollenerwartung unterscheiden",
+ "erwartungen":"Muss-, Soll- und Kann-Erwartungen",
+ "i-me":"I und Me unterscheiden",
+ "play-game":"Play und Game unterscheiden",
+ "gen-other":"Generalized other",
+ "mead-symbol":"Sprache und Symbole bei Mead",
+ "theorie-zuordnung":"Fälle der passenden Theorie zuordnen"
+},
+tagDb:{
+ "parsons-zwang":["parsons",3],"parsons-mead":["mead",1],"parsons-begriffe":["parsons",2],
+ "intra-inter":["dahrendorf",4],"position-rolle":["dahrendorf",1],"erwartungen":["dahrendorf",3],
+ "i-me":["mead",2],"play-game":["mead",3],"gen-other":["mead",4],"mead-symbol":["mead",0],
+ "theorie-zuordnung":["parsons",0]
+},
+tasks:[
+/* ===================== PARSONS ===================== */
+{id:"P1a",theory:"parsons",stage:1,type:"mc",diff:1,tag:"parsons-mead",
+ q:"Wie beschreibt Talcott Parsons die Gesellschaft?",
+ options:["Als soziales System, dessen Teile – Institutionen, Rollen, Werte und Normen – zusammenwirken und so ein stabiles Zusammenleben ermöglichen.",
+  "Als lose Ansammlung von Einzelnen, die ausschließlich ihre eigenen Interessen verfolgen.",
+  "Als Kampf zwischen gesellschaftlichen Klassen, der die Gesellschaft ständig umwälzt.",
+  "Als Ergebnis spontaner Begegnungen, in denen vor allem das Selbst des Einzelnen entsteht."],
+ correct:0,
+ hint:"Denke an das Bild eines Systems, dessen Teile zusammenwirken – ähnlich wie Organe in einem Körper.",
+ explain:"Parsons versteht Gesellschaft als soziales System: Institutionen wie Familie oder Schule, Rollen, Werte und Normen greifen ineinander und tragen dazu bei, dass Zusammenleben dauerhaft funktioniert. Antwort D klingt ähnlich, beschreibt aber Meads Blick auf die Entstehung des Selbst. Der Klassenkampf (C) stammt aus der marxistischen Tradition."},
+{id:"P1b",theory:"parsons",stage:1,type:"mc",diff:1,tag:"parsons-zwang",
+ q:"Was bedeutet Sozialisation aus Sicht von Parsons vor allem?",
+ options:["Menschen übernehmen gesellschaftliche Werte und Normen und verinnerlichen sie, sodass sie zu eigenen Handlungsorientierungen werden.",
+  "Menschen erwerben ausschließlich in der Schule Fachwissen.",
+  "Menschen entwickeln ein I und ein Me, indem sie die Perspektive anderer übernehmen.",
+  "Menschen passen sich nur deshalb an, weil sie Angst vor Strafe haben."],
+ correct:0,
+ hint:"Gesucht ist ein Vorgang, durch den gesellschaftliche Erwartungen ein Teil der eigenen Person werden.",
+ explain:"Für Parsons heißt Sozialisation vor allem Internalisierung: Werte und Normen werden so übernommen, dass sie zu eigenen Orientierungen werden und nicht ständig von außen kontrolliert werden müssen. Anpassung aus Angst vor Strafe (D) ist gerade keine Verinnerlichung. I und Me (C) sind Begriffe von Mead."},
+{id:"P2a",theory:"parsons",stage:2,type:"assign",diff:1,tag:"parsons-begriffe",
+ q:"Ordne jeder Beschreibung den passenden Begriff zu.",
+ cats:["Wert","Norm","Institution"],
+ items:[{text:"Allgemeine Vorstellung davon, was in einer Gesellschaft als wünschenswert gilt – z. B. Gerechtigkeit oder Hilfsbereitschaft.",cat:"Wert"},
+  {text:"Konkrete Verhaltensregel für bestimmte Situationen – z. B. „Im Unterricht meldet man sich, bevor man spricht.“",cat:"Norm"},
+  {text:"Dauerhaft geregelte Einrichtung, die gesellschaftliche Aufgaben erfüllt – z. B. Schule oder Familie.",cat:"Institution"}],
+ hint:"Frage dich: Was ist eine abstrakte Idee, was ist eine konkrete Regel, was ist eine dauerhafte Einrichtung?",
+ explain:"Werte sind allgemein und abstrakt, Normen übersetzen sie in konkrete Verhaltensregeln. Institutionen sind dauerhaft geregelte Einrichtungen, die aus Parsons’ Sicht Werte und Normen weitergeben und so zur Stabilität der Gesellschaft beitragen."},
+{id:"P2b",theory:"parsons",stage:2,type:"mc",diff:1,tag:"parsons-begriffe",
+ situation:"An einer Schule gilt: Wer zu spät kommt, entschuldigt sich kurz und setzt sich leise auf seinen Platz.",
+ q:"Um welchen Begriff handelt es sich bei dieser Regel?",
+ options:["Norm","Wert","Soziale Institution","Generalized other"],
+ correct:0,
+ hint:"Ist das eine allgemeine Vorstellung des Wünschenswerten oder eine konkrete Regel für eine Situation?",
+ explain:"Es handelt sich um eine Norm: eine konkrete Verhaltensregel für eine bestimmte Situation. Dahinter steht ein allgemeinerer Wert, etwa Rücksicht oder Respekt. Die Schule selbst wäre die Institution; der generalized other ist ein Begriff von Mead."},
+{id:"P3a",theory:"parsons",stage:3,type:"mc",diff:2,tag:"parsons-zwang",
+ situation:"Eine neue Schülerin hält sich an die Klassenregeln. Mit der Zeit empfindet sie es als selbstverständlich, pünktlich zu sein und Verantwortung in Gruppenarbeiten zu übernehmen.",
+ q:"Welche Erklärung passt am besten zu Parsons?",
+ options:["Die Schülerin hat ausschließlich Angst vor Bestrafung.",
+  "Sie übernimmt gesellschaftliche Normen und Erwartungen, wodurch das Zusammenleben stabilisiert wird.",
+  "Sie entwickelt ihr Selbst durch die Übernahme der Perspektive anderer.",
+  "Sie lehnt gesellschaftliche Erwartungen grundsätzlich ab."],
+ correct:1,
+ hint:"Achte auf das Wort „selbstverständlich“. Was ist mit den Regeln passiert?",
+ explain:"Die Schülerin hat die Normen der Klasse verinnerlicht – Pünktlichkeit und Verantwortung sind für sie selbstverständlich geworden. Genau das meint Parsons mit Sozialisation: Übernommene Erwartungen stabilisieren das Zusammenleben. Reine Angst vor Strafe (A) passt nicht, weil die Regeln Teil ihrer eigenen Haltung geworden sind. Antwort C beschreibt Meads Perspektive."},
+{id:"P3b",theory:"parsons",stage:3,type:"mc",diff:2,tag:"parsons-zwang",
+ situation:"Ein Junge wird von seinen Eltern gelobt, wenn er teilt und anderen hilft. Als Jugendlicher unterstützt er Mitschüler, ohne lange darüber nachzudenken – es fühlt sich für ihn einfach richtig an.",
+ q:"Wie würde Parsons diese Entwicklung erklären?",
+ options:["Die Familie hat Werte vermittelt, die er verinnerlicht hat und die nun sein Handeln leiten.",
+  "Er hilft nur, weil ihm sonst Sanktionen seiner Mitschüler drohen.",
+  "Hilfsbereitschaft ist angeboren und hat mit Sozialisation nichts zu tun.",
+  "Er erlebt einen Inter-Rollenkonflikt zwischen der Sohn- und der Schülerrolle."],
+ correct:0,
+ hint:"Welche Instanz hat hier Werte weitergegeben – und wie wirken sie heute?",
+ explain:"Die Familie ist für Parsons eine zentrale Sozialisationsinstanz. Sie vermittelt Werte, die das Kind verinnerlicht, sodass sie später ohne äußeren Druck handlungsleitend sind. Sanktionen (B) stehen eher bei Dahrendorf im Vordergrund; ein Konflikt zwischen zwei Rollen (D) ist hier nicht erkennbar."},
+{id:"P4a",theory:"parsons",stage:4,type:"compare",diff:3,tag:"parsons-zwang",
+ situation:"Ein Schüler hält die Regel „Handys bleiben im Unterricht aus“ für unsinnig. Er hält sich trotzdem daran – aber nur, weil er keinen Ärger will.",
+ q:"Welche Aussage gibt Parsons’ Perspektive treffender wieder?",
+ options:["Die Norm wird befolgt, ist aber (noch) nicht verinnerlicht. Gelungene Sozialisation läge aus Parsons’ Sicht erst vor, wenn er sie als eigene Orientierung übernommen hätte.",
+  "Die Norm ist vollständig verinnerlicht – schließlich hält er sich ja daran."],
+ correct:0,
+ hint:"Entscheidend ist nicht nur, was er tut, sondern warum er es tut.",
+ explain:"Parsons unterscheidet zwischen äußerer Anpassung und Verinnerlichung. Wer eine Regel nur aus Angst vor Ärger befolgt, hat sie nicht internalisiert. Die zweite Aussage verwechselt sichtbares Verhalten mit innerer Übernahme."},
+{id:"P4b",theory:"parsons",stage:4,type:"compare",diff:3,tag:"parsons-mead",
+ situation:"Eine Pflegeschule vermittelt Auszubildenden Fachwissen. Zugleich lernen sie, Patientinnen und Patienten respektvoll und verlässlich zu behandeln.",
+ q:"Welche Analyse entspricht Parsons’ Strukturfunktionalismus?",
+ options:["Die Pflegeschule erfüllt als Institution eine Funktion: Sie bereitet auf die Rolle „Pflegekraft“ vor und vermittelt die dazugehörigen Werte und Normen. So trägt sie zur Stabilität des Gesundheitssystems bei.",
+  "Die Auszubildenden entwickeln ihr Selbst vor allem dadurch, dass sie lernen, sich mit den Augen ihrer Patientinnen und Patienten zu sehen."],
+ correct:0,
+ hint:"Parsons blickt von der Gesellschaft als Ganzes auf das Geschehen.",
+ explain:"Parsons fragt nach der Funktion von Institutionen für das gesellschaftliche System. Die Pflegeschule bereitet Menschen auf eine Rolle vor, die das Gesundheitssystem braucht. Die zweite Aussage beschreibt Rollenübernahme im Sinne Meads – sie erklärt die Entwicklung des Selbst, nicht die Stabilität des Systems."},
+{id:"P5a",theory:"parsons",stage:5,type:"theory",diff:2,tag:"parsons-mead",
+ situation:"„Das Selbst entsteht, indem ein Kind lernt, sich aus der Perspektive anderer zu betrachten.“",
+ q:"Diese Aussage taucht in SYSTEM CITY auf. Zu welcher Theorie gehört sie eigentlich?",
+ correct:"mead",
+ hint:"Geht es hier um die Stabilität des Systems – oder um die Entstehung des Selbst?",
+ explain:"Die Aussage beschreibt Meads Gedanken der Rollenübernahme: Das Selbst entsteht in sozialer Interaktion. Parsons spricht zwar auch über Sozialisation, fragt aber vor allem, wie verinnerlichte Werte und Normen das soziale System stabilisieren."},
+{id:"P5b",theory:"parsons",stage:5,type:"theory",diff:2,tag:"parsons-mead",
+ situation:"„Die Schule sorgt dafür, dass Kinder Leistungsbereitschaft als Wert übernehmen. Das ist wichtig, damit sie später Aufgaben in Beruf und Gesellschaft übernehmen können.“",
+ q:"Welche Theorie erklärt diese Aussage am besten?",
+ correct:"parsons",
+ hint:"Es wird nach dem Nutzen einer Institution für die ganze Gesellschaft gefragt.",
+ explain:"Hier geht es um die Funktion der Institution Schule für die Gesellschaft – typisch für Parsons. Werte werden vermittelt, damit Menschen später gesellschaftliche Rollen ausfüllen können. Mead würde eher fragen, wie sich das Selbst der Kinder in der Interaktion entwickelt."},
+
+/* ===================== DAHRENDORF ===================== */
+{id:"D1a",theory:"dahrendorf",stage:1,type:"mc",diff:1,tag:"position-rolle",
+ q:"Was versteht Dahrendorf unter einer sozialen Rolle?",
+ options:["Die Gesamtheit der Verhaltenserwartungen, die an den Inhaber einer sozialen Position gerichtet sind.",
+  "Den Platz, den jemand in einem Gefüge sozialer Beziehungen einnimmt – etwa „Lehrerin“ oder „Vater“.",
+  "Die spontane, nicht vorhersehbare Reaktion eines Menschen in einer Situation.",
+  "Eine angeborene Charaktereigenschaft, die das Verhalten festlegt."],
+ correct:0,
+ hint:"Unterscheide zwischen dem Platz, den jemand einnimmt, und dem, was von ihm erwartet wird.",
+ explain:"Eine Rolle ist das Bündel von Erwartungen, das an eine Position geknüpft ist. Antwort B beschreibt die Position selbst – also den Platz, nicht die Erwartungen an ihn. Die spontane Reaktion (C) entspricht Meads „I“."},
+{id:"D1b",theory:"dahrendorf",stage:1,type:"mc",diff:1,tag:"position-rolle",
+ q:"Was meint Dahrendorf mit dem Begriff „Homo sociologicus“?",
+ options:["Ein Modell des Menschen als Träger sozialer Rollen, der ständig mit gesellschaftlichen Erwartungen konfrontiert ist.",
+  "Einen Menschen, der in jeder Situation rational seinen eigenen Nutzen maximiert.",
+  "Einen Menschen, der an keinerlei gesellschaftliche Erwartungen gebunden ist.",
+  "Einen Menschen, dessen Verhalten vollständig angeboren ist."],
+ correct:0,
+ hint:"Der Begriff stellt den Menschen in Beziehung zu sozialen Erwartungen.",
+ explain:"Der Homo sociologicus ist ein Modell: Der Mensch wird betrachtet, insofern er Positionen innehat und mit den daran geknüpften Erwartungen umgehen muss. Dahrendorf betont, dass dieses Modell nicht den ganzen Menschen erfasst. Der nutzenmaximierende Mensch (B) ist der Homo oeconomicus."},
+{id:"D2a",theory:"dahrendorf",stage:2,type:"assign",diff:2,tag:"erwartungen",
+ q:"Ordne die Erwartungen an eine Lehrkraft der passenden Erwartungsart zu.",
+ cats:["Muss-Erwartung","Soll-Erwartung","Kann-Erwartung"],
+ items:[{text:"Sie darf Schülerinnen und Schüler nicht körperlich bestrafen.",cat:"Muss-Erwartung"},
+  {text:"Sie geht freundlich und respektvoll mit Eltern um.",cat:"Soll-Erwartung"},
+  {text:"Sie leitet freiwillig die Theater-AG.",cat:"Kann-Erwartung"}],
+ hint:"Frage dich bei jeder Erwartung: Was passiert, wenn sie nicht erfüllt wird?",
+ explain:"Muss-Erwartungen sind meist rechtlich verankert und mit harten Sanktionen verbunden. Soll-Erwartungen sind ebenfalls verbindlich, Abweichungen werden aber vor allem sozial sanktioniert, etwa durch Kritik. Kann-Erwartungen sind freiwillig – wer sie erfüllt, erhält eher Anerkennung."},
+{id:"D2b",theory:"dahrendorf",stage:2,type:"assign",diff:2,tag:"position-rolle",
+ situation:"EXPECTATION SCANNER: Ein Klassensprecher soll die Interessen seiner Mitschüler vertreten. Gleichzeitig erwartet die Lehrkraft, dass er bei der Organisation des Schulfests zuverlässig mitarbeitet.",
+ q:"Was ist hier soziale Position, was soziale Rolle, was eine einzelne Rollenerwartung?",
+ cats:["Soziale Position","Soziale Rolle","Rollenerwartung"],
+ items:[{text:"Klassensprecher",cat:"Soziale Position"},
+  {text:"Die Gesamtheit aller Erwartungen, die an den Klassensprecher gerichtet sind.",cat:"Soziale Rolle"},
+  {text:"Er soll die Wünsche der Klasse gegenüber der Schulleitung vertreten.",cat:"Rollenerwartung"},
+  {text:"Er soll bei der Organisation des Schulfests zuverlässig mitarbeiten.",cat:"Rollenerwartung"}],
+ hint:"Die Position ist der Platz, die Rolle das ganze Bündel – und eine Erwartung ist ein einzelnes Teil davon.",
+ explain:"„Klassensprecher“ ist die Position – der Platz im sozialen Gefüge der Schule. Die Rolle ist das gesamte Bündel an Erwartungen, das an diese Position geknüpft ist. Die einzelnen Erwartungen stammen von verschiedenen Bezugsgruppen: von den Mitschülern und von der Lehrkraft."},
+{id:"D3a",theory:"dahrendorf",stage:3,type:"mc",diff:2,tag:"intra-inter",
+ situation:"Eine Schülerin soll für eine wichtige Klausur lernen. Gleichzeitig erwarten ihre Freunde, dass sie am selben Abend an einem gemeinsamen Treffen teilnimmt.",
+ q:"Welcher Begriff beschreibt die Situation am besten?",
+ options:["Inter-Rollenkonflikt","Intra-Rollenkonflikt","Generalized other","Systemstabilität"],
+ correct:0,
+ hint:"Wie viele verschiedene Rollen hat die Schülerin in dieser Situation?",
+ explain:"Lernen für die Klausur gehört zur Schülerrolle, das Treffen zur Rolle als Freundin. Weil Erwartungen aus zwei verschiedenen Rollen kollidieren, liegt ein Inter-Rollenkonflikt vor. Ein Intra-Rollenkonflikt läge vor, wenn widersprüchliche Erwartungen an dieselbe Rolle gerichtet wären."},
+{id:"D3b",theory:"dahrendorf",stage:3,type:"mc",diff:2,tag:"intra-inter",
+ situation:"Eine Trainerin einer Jugendfußballmannschaft: Die Eltern erwarten, dass alle Kinder gleich viel Spielzeit bekommen. Der Vereinsvorstand erwartet, dass sie immer die stärksten Spieler aufstellt, damit die Mannschaft gewinnt.",
+ q:"Welcher Begriff beschreibt die Situation am besten?",
+ options:["Intra-Rollenkonflikt","Inter-Rollenkonflikt","Play","Systemstabilität"],
+ correct:0,
+ hint:"Zähle nicht die beteiligten Gruppen, sondern die betroffenen Rollen der Trainerin.",
+ explain:"Beide Erwartungen richten sich an dieselbe Rolle – die der Trainerin. Sie kommen nur von unterschiedlichen Bezugsgruppen (Eltern und Vorstand). Darum handelt es sich um einen Intra-Rollenkonflikt. Dass mehrere Gruppen beteiligt sind, macht daraus noch keinen Inter-Rollenkonflikt."},
+{id:"D4a",theory:"dahrendorf",stage:4,type:"compare",diff:3,tag:"intra-inter",
+ situation:"Mehmet ist Schüler und arbeitet nebenbei in einem Supermarkt. Sein Chef bittet ihn, am Donnerstag länger zu bleiben. Am Freitag schreibt er eine Mathearbeit, für die er noch lernen muss.",
+ q:"Welche Analyse ist zutreffend?",
+ options:["Inter-Rollenkonflikt: Erwartungen aus der Rolle als Aushilfe und aus der Rolle als Schüler widersprechen sich.",
+  "Intra-Rollenkonflikt: Chef und Mathelehrerin richten widersprüchliche Erwartungen an dieselbe Rolle."],
+ correct:0,
+ hint:"An welche Rolle richtet der Chef seine Erwartung – und an welche die Schule?",
+ explain:"Mehmet hat zwei Rollen: Aushilfe im Supermarkt und Schüler. Der Chef richtet seine Erwartung an die Arbeitsrolle, die Schule an die Schülerrolle. Die zweite Aussage übersieht, dass hier zwei verschiedene Rollen betroffen sind."},
+{id:"D4b",theory:"dahrendorf",stage:4,type:"compare",diff:3,tag:"intra-inter",
+ situation:"Eine Klassenlehrerin: Die Schulleitung erwartet eine strenge, einheitliche Notengebung. Viele Eltern erwarten dagegen, dass sie bei schwachen Leistungen nachsichtig ist.",
+ q:"Welche Analyse ist zutreffend?",
+ options:["Intra-Rollenkonflikt: Unterschiedliche Bezugsgruppen richten widersprüchliche Erwartungen an dieselbe Rolle – die der Lehrerin.",
+  "Inter-Rollenkonflikt: Weil zwei verschiedene Gruppen beteiligt sind, kollidieren zwei verschiedene Rollen."],
+ correct:0,
+ hint:"Wie viele Rollen der Lehrerin sind hier tatsächlich betroffen?",
+ explain:"Schulleitung und Eltern sind verschiedene Bezugsgruppen, beide richten ihre Erwartungen aber an die Rolle als Lehrerin. Deshalb liegt ein Intra-Rollenkonflikt vor. Ein Inter-Rollenkonflikt entsteht erst, wenn zwei verschiedene Rollen einer Person kollidieren – etwa Lehrerin und Mutter."},
+{id:"D5a",theory:"dahrendorf",stage:5,type:"mc",diff:3,tag:"theorie-zuordnung",
+ q:"Parsons und Dahrendorf sprechen beide über soziale Rollen. Welche Aussage gibt Dahrendorfs besonderen Akzent wieder?",
+ options:["Rollenerwartungen treten dem Einzelnen als gesellschaftliche Vorgaben gegenüber; wer von ihnen abweicht, muss mit Sanktionen rechnen.",
+  "Verinnerlichte Werte und Normen sorgen dafür, dass das soziale System im Gleichgewicht bleibt.",
+  "Das Selbst entsteht durch die Übernahme der Perspektive des generalized other.",
+  "Soziale Rollen sind angeboren und verändern sich im Laufe des Lebens nicht."],
+ correct:0,
+ hint:"Welche Aussage stellt Erwartungen und Sanktionen in den Mittelpunkt?",
+ explain:"Dahrendorf betont, dass Rollen dem Einzelnen als Erwartungen von außen begegnen und durch Sanktionen abgesichert sind – er nennt die Gesellschaft deshalb eine „ärgerliche Tatsache“. Antwort B ist typisch für Parsons, Antwort C für Mead."},
+{id:"D5b",theory:"dahrendorf",stage:5,type:"theory",diff:2,tag:"theorie-zuordnung",
+ situation:"Ein Schüler merkt: Wenn er im Unterricht ständig dazwischenruft, folgen Ermahnungen und eine schlechtere Mitarbeitsnote. Hält er sich an die Gesprächsregeln, gibt es keine Probleme.",
+ q:"Welche Theorie beschreibt diesen Zusammenhang von Erwartung und Sanktion besonders treffend?",
+ correct:"dahrendorf",
+ hint:"Im Mittelpunkt stehen Erwartungen an eine Position und die Folgen von Abweichung.",
+ explain:"Dahrendorf beschreibt Rollen als Erwartungen, die mit Sanktionen verbunden sind: Wer abweicht, wird negativ sanktioniert. Parsons würde stärker fragen, ob der Schüler die Norm verinnerlicht hat; Mead, wie sich sein Selbst in der Interaktion entwickelt."},
+
+/* ===================== MEAD ===================== */
+{id:"M1a",theory:"mead",stage:1,type:"mc",diff:1,tag:"parsons-mead",
+ q:"Wie entsteht das Selbst nach George Herbert Mead?",
+ options:["Durch soziale Interaktion und Kommunikation, in der ein Mensch lernt, sich aus der Perspektive anderer zu sehen.",
+  "Es ist von Geburt an vollständig vorhanden und entfaltet sich ohne andere Menschen.",
+  "Vor allem dadurch, dass verinnerlichte Werte das soziale System stabilisieren.",
+  "Durch das Erfüllen von Muss-Erwartungen, die mit harten Sanktionen verbunden sind."],
+ correct:0,
+ hint:"Welche Antwort stellt das Miteinander von Menschen in den Mittelpunkt?",
+ explain:"Für Mead ist das Selbst ein soziales Produkt: Es entsteht in Interaktion, indem man die Haltungen anderer gegenüber sich selbst übernimmt. Antwort C beschreibt Parsons’ Interesse an Systemstabilität, Antwort D Dahrendorfs Erwartungsarten."},
+{id:"M1b",theory:"mead",stage:1,type:"mc",diff:2,tag:"mead-symbol",
+ q:"Welche Bedeutung haben Sprache und Symbole bei Mead?",
+ options:["Über Symbole mit gemeinsamer Bedeutung – vor allem Sprache – können Menschen sich in andere hineinversetzen. Das ist eine Grundlage für die Entwicklung des Selbst.",
+  "Sprache dient nur der Weitergabe von Informationen und hat mit dem Selbst nichts zu tun.",
+  "Symbole dienen ausschließlich dazu, Normen mit Strafen durchzusetzen.",
+  "Sprache wird erst im Erwachsenenalter wichtig, wenn Rollenkonflikte auftreten."],
+ correct:0,
+ hint:"Wie kann ich wissen, wie mein Gegenüber auf meine Worte reagieren wird?",
+ explain:"Mead spricht von signifikanten Symbolen: Gesten und Wörter, die für Sprecher und Hörer dieselbe Bedeutung haben. Wer spricht, kann so die Reaktion des anderen bei sich selbst vorwegnehmen – ein Schritt zur Rollenübernahme und damit zur Entwicklung des Selbst."},
+{id:"M2a",theory:"mead",stage:2,type:"assign",diff:2,tag:"i-me",
+ q:"Ordne jeder Beschreibung den passenden Begriff zu.",
+ cats:["I","Me","Generalized other"],
+ items:[{text:"Die spontane, nicht vollständig vorhersehbare Reaktion eines Menschen.",cat:"I"},
+  {text:"Die übernommenen Haltungen anderer gegenüber der eigenen Person – wie man sich mit den Augen anderer sieht.",cat:"Me"},
+  {text:"Die verallgemeinerte Erwartung einer ganzen Gruppe oder Gemeinschaft – „was man bei uns so macht“.",cat:"Generalized other"}],
+ hint:"Ein Begriff ist spontan, einer bezieht sich auf die Sicht anderer auf dich, einer auf eine ganze Gruppe.",
+ explain:"Das I ist der spontane, kreative Anteil des Selbst. Das Me umfasst die verinnerlichten Haltungen anderer. Der generalized other bündelt die Erwartungen einer ganzen Gemeinschaft und wird im Laufe der Entwicklung Teil des Me. I und Me sind keine Gegner, sondern stehen in ständigem Austausch."},
+{id:"M2b",theory:"mead",stage:2,type:"assign",diff:2,tag:"play-game",
+ q:"Play oder Game? Ordne die Situationen zu.",
+ cats:["Play","Game"],
+ items:[{text:"Ein Kind spielt Kaufladen und ist abwechselnd Verkäufer und Kundin.",cat:"Play"},
+  {text:"Ein Kind spielt Handball und weiß, was Torwart, Abwehr und Angriff in diesem Moment tun müssen.",cat:"Game"},
+  {text:"Ein Kind „kocht“ in der Spielküche wie sein Vater.",cat:"Play"},
+  {text:"Ein Kind spielt Verstecken und kennt die Regeln, die für Suchende und Versteckte gleichermaßen gelten.",cat:"Game"}],
+ hint:"Geht es um eine einzelne Rolle – oder um das Zusammenspiel vieler Rollen nach gemeinsamen Regeln?",
+ explain:"Im Play übernimmt das Kind einzelne Rollen nacheinander, meist die von wichtigen Bezugspersonen. Im Game muss es mehrere aufeinander bezogene Rollen und die gemeinsamen Regeln gleichzeitig im Blick haben."},
+{id:"M3a",theory:"mead",stage:3,type:"mc",diff:2,tag:"play-game",
+ situation:"Ein Kind möchte beim Fußball ein Tor erzielen. Es versteht jedoch, dass es beim Verteidigen eine andere Aufgabe übernehmen muss und dass die Mitspieler ebenfalls bestimmte Aufgaben erfüllen.",
+ q:"Welches Konzept beschreibt besonders gut, dass das Kind die aufeinander bezogenen Rollen und Regeln des gesamten Spiels verstehen muss?",
+ options:["Play","Game","Systemstabilität","Inter-Rollenkonflikt"],
+ correct:1,
+ hint:"Geht es um eine einzelne Rolle oder um das Zusammenspiel aller Rollen?",
+ explain:"Im Game muss das Kind die Rollen aller Mitspielenden und die Regeln des gesamten Spiels gleichzeitig berücksichtigen. Beim Play würde es nur einzelne Rollen nachahmen, ohne die anderen Rollen mitzudenken."},
+{id:"M3b",theory:"mead",stage:3,type:"mc",diff:2,tag:"i-me",
+ situation:"I OR ME? Eine Schülerin weiß genau, dass in ihrer Lerngruppe niemand der Lehrkraft widerspricht. In einer Diskussion widerspricht sie trotzdem – spontan und für sie selbst überraschend.",
+ q:"Welcher Anteil des Selbst zeigt sich in ihrer spontanen Reaktion?",
+ options:["I","Me","Generalized other","Play"],
+ correct:0,
+ hint:"Achte auf „spontan“ und „für sie selbst überraschend“.",
+ explain:"Ihr Wissen darüber, was die Gruppe erwartet, gehört zum Me. Die spontane, nicht vorhersehbare Reaktion darauf ist das I. Mead betont: Das I antwortet auf das Me – beide gehören zum Selbst."},
+{id:"M4a",theory:"mead",stage:4,type:"compare",diff:3,tag:"i-me",
+ situation:"Jonas überlegt vor einem Bewerbungsgespräch: „Wie wirke ich wohl auf die Personalerin, wenn ich so antworte?“ Daraufhin formuliert er seine Antwort um.",
+ q:"Welche Analyse passt besser zu Mead?",
+ options:["Jonas übernimmt die Perspektive einer anderen Person und sieht sich gleichsam mit ihren Augen. Diese verinnerlichte Sicht anderer auf ihn ist das Me.",
+  "Jonas handelt aus dem I, weil er seine Antwort selbst formuliert."],
+ correct:0,
+ hint:"Woran orientiert sich Jonas, bevor er antwortet?",
+ explain:"Jonas nimmt vorweg, wie die Personalerin ihn sehen wird – das ist Rollenübernahme, und die verinnerlichte Sicht auf sich selbst ist das Me. Dass er selbst spricht, macht eine Handlung noch nicht zum I; das I meint den spontanen, nicht vorgeplanten Anteil."},
+{id:"M4b",theory:"mead",stage:4,type:"compare",diff:3,tag:"gen-other",
+ situation:"Lea klettert seit einem Jahr in einer Gruppe. Früher fragte sie sich vor allem, was ihre beste Freundin von ihr denkt. Heute überlegt sie, was in der Klettergruppe allgemein als faires und sicheres Verhalten gilt.",
+ q:"Welche Analyse passt besser zu Mead?",
+ options:["Lea orientiert sich am generalized other – an den verallgemeinerten Erwartungen der ganzen Gruppe.",
+  "Lea befindet sich in der Play-Phase, weil sie die Rolle einer einzelnen Person nachahmt."],
+ correct:0,
+ hint:"Orientiert sie sich an einer Person – oder an einer ganzen Gruppe?",
+ explain:"Lea orientiert sich nicht mehr nur an einer einzelnen Person, sondern an dem, was „man“ in der Gruppe erwartet. Diese verallgemeinerte Perspektive nennt Mead generalized other. Im Play würde sie einzelne Rollen nachahmen."},
+{id:"M5a",theory:"mead",stage:5,type:"mc",diff:3,tag:"parsons-mead",
+ q:"Parsons und Mead beschreiben beide, wie Menschen Erwartungen anderer übernehmen. Worin liegt ein zentraler Unterschied?",
+ options:["Mead erklärt, wie das Selbst in Interaktion entsteht, und betont mit dem I einen spontanen Anteil. Parsons fragt vor allem, wie Verinnerlichung zur Stabilität des sozialen Systems beiträgt.",
+  "Mead untersucht nur Erwachsene, Parsons nur Kinder.",
+  "Parsons unterscheidet Intra- und Inter-Rollenkonflikte, Mead nicht.",
+  "Es gibt keinen Unterschied – beide Theorien sagen dasselbe aus."],
+ correct:0,
+ hint:"Welche Antwort nennt für jede Theorie ihre eigene Leitfrage?",
+ explain:"Beide sehen Sozialisation als Übernahme von Erwartungen. Parsons fragt aber nach der Funktion für das soziale System, Mead nach der Entstehung des Selbst in der Interaktion. Die Unterscheidung von Intra- und Inter-Rollenkonflikten (C) gehört zur Rollentheorie, die hier mit Dahrendorf behandelt wird."},
+{id:"M5b",theory:"mead",stage:5,type:"theory",diff:2,tag:"play-game",
+ situation:"Ein Mädchen spielt „Lehrerin“: Es stellt seine Kuscheltiere in eine Reihe und spricht mit strenger Stimme zu ihnen.",
+ q:"Welche Theorie erklärt diese Situation am besten?",
+ correct:"mead",
+ hint:"Hier wird eine Rolle nachgespielt. Welche Theorie beschreibt dieses Nachspielen als Entwicklungsstufe?",
+ explain:"Das Mädchen übernimmt spielerisch eine einzelne Rolle – typisch für Meads Play-Stufe. Es versetzt sich in die Lehrerin hinein und entwickelt dabei sein Selbst weiter. Dahrendorf würde nach Erwartungen an eine Position fragen; hier steht aber die Rollenübernahme im Spiel im Mittelpunkt."},
+
+/* ===================== WIEDERHOLUNGSAUFGABEN (adaptiv) ===================== */
+{id:"RP1",theory:"parsons",stage:0,type:"mc",diff:2,tag:"parsons-zwang",
+ situation:"Ein Mann trennt zu Hause sorgfältig seinen Müll, obwohl dort niemand kontrolliert. Umweltschutz ist ihm wichtig.",
+ q:"Welche Deutung passt zu Parsons?",
+ options:["Er hat die Norm und den dahinterstehenden Wert verinnerlicht – äußere Kontrolle ist nicht mehr nötig.",
+  "Er trennt den Müll ausschließlich, weil er ein Bußgeld fürchtet.",
+  "Er reagiert spontan aus dem I heraus.",
+  "Er befindet sich in einem Intra-Rollenkonflikt."],
+ correct:0,
+ hint:"Es kontrolliert niemand. Woher kommt also seine Motivation?",
+ explain:"Weil niemand kontrolliert und ihm Umweltschutz wichtig ist, liegt Verinnerlichung vor: Wert und Norm sind Teil seiner eigenen Orientierung geworden. So stellt sich Parsons gelungene Sozialisation vor."},
+{id:"RP2",theory:"parsons",stage:0,type:"theory",diff:1,tag:"parsons-mead",
+ situation:"„Die Familie vermittelt Kindern grundlegende Werte, damit sie später ihre Rollen in der Gesellschaft ausfüllen können.“",
+ q:"Welche Theorie erklärt diese Aussage am besten?",
+ correct:"parsons",
+ hint:"Es geht um die Funktion der Familie für die Gesellschaft.",
+ explain:"Hier geht es um die Funktion der Familie für die Gesellschaft – eine typisch strukturfunktionalistische Perspektive. Mead würde fragen, wie das Kind in der Interaktion mit der Familie ein Selbst entwickelt."},
+{id:"RP3",theory:"parsons",stage:0,type:"mc",diff:1,tag:"parsons-begriffe",
+ q:"„Gerechtigkeit“ ist ein Beispiel für …",
+ options:["einen Wert","eine Norm","eine soziale Institution","eine soziale Position"],
+ correct:0,
+ hint:"Ist Gerechtigkeit eine konkrete Regel oder eine allgemeine Vorstellung?",
+ explain:"Gerechtigkeit ist eine allgemeine Vorstellung vom Wünschenswerten, also ein Wert. Eine Norm wäre eine konkrete Regel, die daraus folgt – z. B. „Bei Gruppenarbeiten arbeiten alle mit.“"},
+{id:"RD1",theory:"dahrendorf",stage:0,type:"mc",diff:2,tag:"intra-inter",
+ situation:"Ein Busfahrer soll laut Fahrplan pünktlich sein. Die Fahrgäste erwarten gleichzeitig, dass er auf Menschen wartet, die noch zur Haltestelle laufen.",
+ q:"Welcher Begriff beschreibt die Situation am besten?",
+ options:["Intra-Rollenkonflikt","Inter-Rollenkonflikt","Generalized other","Game"],
+ correct:0,
+ hint:"An welche Rolle(n) des Busfahrers richten sich die Erwartungen?",
+ explain:"Beide Erwartungen richten sich an dieselbe Rolle: Busfahrer. Sie kommen nur von unterschiedlichen Bezugsgruppen (Verkehrsbetrieb und Fahrgäste) – deshalb liegt ein Intra-Rollenkonflikt vor."},
+{id:"RD2",theory:"dahrendorf",stage:0,type:"mc",diff:1,tag:"position-rolle",
+ q:"„Mutter“, „Schülersprecherin“, „Kassierer“ – diese Begriffe bezeichnen zunächst …",
+ options:["soziale Positionen","Rollenerwartungen","Rollenkonflikte","Normen"],
+ correct:0,
+ hint:"Sind das Plätze im sozialen Gefüge oder Erwartungen an diese Plätze?",
+ explain:"Es sind Positionen, also Plätze im sozialen Gefüge. Erst die daran geknüpften Erwartungen bilden die jeweilige Rolle."},
+{id:"RD3",theory:"dahrendorf",stage:0,type:"mc",diff:1,tag:"erwartungen",
+ q:"Welche Erwartung an Autofahrerinnen und Autofahrer ist eine Muss-Erwartung?",
+ options:["An einer roten Ampel anhalten.","Das Auto regelmäßig waschen.","Freunde nach einer Feier nach Hause fahren.","Beim Einfädeln anderen höflich zuwinken."],
+ correct:0,
+ hint:"Welche Erwartung ist gesetzlich geregelt und wird mit Bußgeld sanktioniert?",
+ explain:"Das Anhalten an einer roten Ampel ist gesetzlich vorgeschrieben und wird mit Bußgeld sanktioniert – eine Muss-Erwartung. Die übrigen Erwartungen sind Soll- oder Kann-Erwartungen ohne rechtliche Sanktion."},
+{id:"RD4",theory:"dahrendorf",stage:0,type:"theory",diff:1,tag:"theorie-zuordnung",
+ situation:"Eine Jugendliche ist Tochter und zugleich Mitglied der Schülervertretung. Am selben Abend erwarten ihre Eltern sie beim Familienessen, die Schülervertretung bei einer Sitzung.",
+ q:"Welche Theorie liefert die passenden Begriffe für diese Situation?",
+ correct:"dahrendorf",
+ hint:"Zwei Rollen, zwei widersprüchliche Erwartungen – wer hat dafür Begriffe?",
+ explain:"Zwei Rollen derselben Person stellen widersprüchliche Erwartungen – ein Inter-Rollenkonflikt im Sinne der Rollentheorie, die hier mit Dahrendorf behandelt wird."},
+{id:"RM1",theory:"mead",stage:0,type:"mc",diff:2,tag:"i-me",
+ situation:"Ein Junge möchte in der Bibliothek laut über einen Witz lachen. Da denkt er: „Die anderen hier finden das bestimmt unmöglich.“",
+ q:"Welcher Anteil des Selbst meldet sich in diesem Gedanken?",
+ options:["Me","I","Play","Inter-Rollenkonflikt"],
+ correct:0,
+ hint:"Der Gedanke spiegelt wider, wie andere ihn sehen würden.",
+ explain:"Der Gedanke spiegelt die verinnerlichten Haltungen anderer wider – das Me. Der Impuls, laut loszulachen, wäre der spontane Anteil, das I."},
+{id:"RM2",theory:"mead",stage:0,type:"mc",diff:1,tag:"play-game",
+ q:"Welche Situation zeigt am deutlichsten die Game-Stufe?",
+ options:["Beim Völkerball weiß ein Kind, wer gerade werfen darf, wer ausweichen muss und welche Regeln für alle gelten.",
+  "Ein Kind spielt allein Feuerwehrmann.",
+  "Ein Kind ahmt seinen Vater beim Telefonieren nach.",
+  "Ein Kind malt ein Bild für seine Oma."],
+ correct:0,
+ hint:"Im Game müssen viele Rollen und gemeinsame Regeln gleichzeitig beachtet werden.",
+ explain:"Nur beim Völkerball muss das Kind die Rollen aller Beteiligten und die gemeinsamen Regeln gleichzeitig berücksichtigen – das ist die Game-Stufe. Feuerwehrmann spielen oder den Vater nachahmen sind typische Play-Situationen."},
+{id:"RM3",theory:"mead",stage:0,type:"mc",diff:2,tag:"gen-other",
+ situation:"Ein Jugendlicher denkt vor einem Spiel: „In unserem Team lässt man niemanden im Stich.“",
+ q:"Was drückt sich in diesem Gedanken aus?",
+ options:["Generalized other","I","Play","Intra-Rollenkonflikt"],
+ correct:0,
+ hint:"„Man“ – gemeint ist die Erwartung der ganzen Gruppe.",
+ explain:"Der Jugendliche orientiert sich an der verallgemeinerten Erwartung seines Teams – dem generalized other. Er denkt nicht an eine bestimmte Person, sondern an das, was „man“ in dieser Gemeinschaft tut."},
+{id:"RM4",theory:"mead",stage:0,type:"mc",diff:2,tag:"mead-symbol",
+ q:"Warum ist ein Wort wie „Vorsicht!“ für Mead ein signifikantes Symbol?",
+ options:["Weil es beim Sprecher dieselbe Bedeutung auslöst wie beim Hörer – der Sprecher kann die Reaktion des anderen vorwegnehmen.",
+  "Weil es besonders laut gerufen wird.",
+  "Weil es eine Muss-Erwartung mit Sanktion ausdrückt.",
+  "Weil es ausschließlich in Institutionen verwendet wird."],
+ correct:0,
+ hint:"Signifikant heißt hier: Beide Seiten verbinden dieselbe Bedeutung damit.",
+ explain:"Ein signifikantes Symbol hat für Sprecher und Hörer dieselbe Bedeutung. Wer „Vorsicht!“ ruft, weiß, wie der andere darauf reagieren wird – er nimmt dessen Reaktion bei sich vorweg. Darin liegt für Mead eine Grundlage der Rollenübernahme."},
+
+/* ===================== FINAL BOSS ===================== */
+{id:"B1",theory:"boss",solves:"parsons",stage:9,type:"mc",diff:2,tag:"parsons-zwang",
+ situation:"Eine Schülerin hat die Regeln ihrer Schule so verinnerlicht, dass sie sie auch einhält, wenn niemand hinsieht.",
+ q:"Welche Theorie und welcher Begriff erklären die Situation am besten?",
+ options:["Parsons – Verinnerlichung von Normen","Dahrendorf – Muss-Erwartung mit Sanktion","Mead – Play-Stufe","Mead – das I"],
+ correct:0,
+ hint:"Niemand sieht hin – also wirkt keine Sanktion von außen.",
+ explain:"Die Regeln wirken, obwohl niemand kontrolliert: Sie sind internalisiert. Das ist Parsons’ Verständnis von Sozialisation. Eine Muss-Erwartung (B) würde gerade über drohende Sanktionen wirken."},
+{id:"B2",theory:"boss",solves:"dahrendorf",stage:9,type:"mc",diff:2,tag:"intra-inter",
+ situation:"Ein Jugendlicher ist Kapitän seines Volleyballteams und soll als Sohn am Wochenende auf seine kleine Schwester aufpassen. Turnier und Babysitten fallen auf denselben Tag.",
+ q:"Welche Theorie und welcher Begriff erklären die Situation am besten?",
+ options:["Dahrendorf – Inter-Rollenkonflikt","Dahrendorf – Intra-Rollenkonflikt","Parsons – Funktion der Familie","Mead – Game-Stufe"],
+ correct:0,
+ hint:"Kapitän und Sohn – wie viele Rollen sind betroffen?",
+ explain:"Zwei verschiedene Rollen – Mannschaftskapitän und Sohn – stellen widersprüchliche Erwartungen. Das ist ein Inter-Rollenkonflikt. Ein Intra-Rollenkonflikt beträfe nur eine Rolle."},
+{id:"B3",theory:"boss",solves:"mead",stage:9,type:"mc",diff:2,tag:"play-game",
+ situation:"Ein Kind lernt im Basketball, die Perspektiven aller Mitspielenden und die Regeln gleichzeitig zu berücksichtigen.",
+ q:"Welche Theorie und welcher Begriff erklären die Situation am besten?",
+ options:["Mead – Game-Stufe","Mead – Play-Stufe","Dahrendorf – soziale Rolle","Parsons – Systemstabilität"],
+ correct:0,
+ hint:"Alle Mitspielenden gleichzeitig – nicht nur eine Rolle.",
+ explain:"Das gleichzeitige Berücksichtigen vieler aufeinander bezogener Rollen nach gemeinsamen Regeln kennzeichnet Meads Game-Stufe. Im Play würde das Kind nur einzelne Rollen nachahmen."},
+{id:"B4",theory:"boss",solves:"parsons",stage:9,type:"mc",diff:2,tag:"theorie-zuordnung",
+ situation:"Die Schule vermittelt neben Fachwissen auch Pünktlichkeit und Leistungsbereitschaft – Werte, die in Beruf und Gesellschaft gebraucht werden.",
+ q:"Welche Theorie und welcher Begriff erklären die Situation am besten?",
+ options:["Parsons – Funktion sozialer Institutionen","Mead – generalized other","Dahrendorf – Kann-Erwartung","Dahrendorf – Inter-Rollenkonflikt"],
+ correct:0,
+ hint:"Die Schule erfüllt hier eine Aufgabe für die ganze Gesellschaft.",
+ explain:"Die Schule erscheint als Institution, die Werte weitergibt, welche die Gesellschaft braucht – eine typisch strukturfunktionalistische Erklärung nach Parsons."},
+{id:"B5",theory:"boss",solves:"mead",stage:9,type:"mc",diff:3,tag:"i-me",
+ situation:"Eine Person kennt die Erwartungen ihrer Gruppe genau, reagiert in einer Situation aber spontan ganz anders, als es diese Erwartungen nahelegen.",
+ q:"Welche Theorie und welcher Begriff erklären die Situation am besten?",
+ options:["Mead – das I","Mead – das Me","Parsons – Systemstabilität durch Normen","Dahrendorf – Intra-Rollenkonflikt"],
+ correct:0,
+ hint:"Die Erwartungen kennt sie – entscheidend ist die spontane Reaktion.",
+ explain:"Die bekannten Gruppenerwartungen entsprechen dem Me, die spontane, abweichende Reaktion dem I. Mead betont, dass das Selbst immer auch diesen nicht vollständig festgelegten Anteil hat."},
+{id:"B6",theory:"boss",solves:"dahrendorf",stage:9,type:"mc",diff:3,tag:"intra-inter",
+ situation:"Eine Ärztin soll laut Klinikleitung möglichst viele Patientinnen und Patienten am Tag behandeln. Ihre Patientinnen und Patienten erwarten, dass sie sich viel Zeit nimmt.",
+ q:"Welche Theorie und welcher Begriff erklären die Situation am besten?",
+ options:["Dahrendorf – Intra-Rollenkonflikt","Dahrendorf – Inter-Rollenkonflikt","Parsons – Funktion sozialer Institutionen","Mead – das Me"],
+ correct:0,
+ hint:"Zwei Bezugsgruppen – aber wie viele Rollen der Ärztin?",
+ explain:"Klinikleitung und Patienten richten widersprüchliche Erwartungen an dieselbe Rolle – die der Ärztin. Das ist ein Intra-Rollenkonflikt, auch wenn zwei verschiedene Gruppen beteiligt sind."},
+{id:"B7",theory:"boss",solves:"mead",stage:9,type:"mc",diff:1,tag:"play-game",
+ situation:"Ein Kleinkind spielt Busfahrer und ahmt dabei die Ansagen nach, die es im Bus gehört hat.",
+ q:"Welche Theorie und welcher Begriff erklären die Situation am besten?",
+ options:["Mead – Play-Stufe","Mead – Game-Stufe","Dahrendorf – soziale Position","Parsons – Verinnerlichung von Werten"],
+ correct:0,
+ hint:"Eine einzelne Rolle wird nachgespielt.",
+ explain:"Das Kind übernimmt spielerisch eine einzelne Rolle – typisch für die Play-Stufe nach Mead. Es braucht dafür noch nicht das Zusammenspiel vieler Rollen, wie es das Game verlangt."},
+{id:"B8",theory:"boss",solves:"mead",stage:9,type:"mc",diff:3,tag:"gen-other",
+ situation:"Ein Jugendlicher überlegt vor einer wichtigen Entscheidung: „Was würde man in unserer Gemeinschaft dazu sagen?“",
+ q:"Welche Theorie und welcher Begriff erklären die Situation am besten?",
+ options:["Mead – generalized other","Mead – das I","Dahrendorf – Kann-Erwartung","Parsons – Funktion der Familie"],
+ correct:0,
+ hint:"„Man“ und „Gemeinschaft“ – wessen Perspektive wird hier eingenommen?",
+ explain:"Der Jugendliche nimmt die verallgemeinerte Perspektive seiner Gemeinschaft ein – den generalized other. Er orientiert sich nicht an einer einzelnen Person, sondern an den Erwartungen der Gruppe als Ganzes."},
+{id:"B9",theory:"boss",solves:"dahrendorf",stage:9,type:"mc",diff:2,tag:"position-rolle",
+ situation:"Von einer Schiedsrichterin wird erwartet, dass sie unparteiisch pfeift, die Regeln kennt und das Spiel ruhig leitet.",
+ q:"Welche Theorie und welcher Begriff erklären die Situation am besten?",
+ options:["Dahrendorf – soziale Rolle","Dahrendorf – soziale Position","Mead – Game-Stufe","Parsons – gesellschaftliche Stabilität"],
+ correct:0,
+ hint:"Beschrieben wird nicht der Platz, sondern das Bündel an Erwartungen.",
+ explain:"Das Bündel an Erwartungen, das an die Position „Schiedsrichterin“ geknüpft ist, ist ihre soziale Rolle. Die Position wäre der Platz selbst, unabhängig davon, was erwartet wird."}
+],
+
+db:{
+ parsons:[
+  {term:"Strukturfunktionalismus",def:"Theorieansatz, der Gesellschaft als System betrachtet und fragt, welche Funktion einzelne Strukturen – etwa Familie, Schule oder Recht – für den Erhalt dieses Systems haben.",ex:"Man fragt nicht nur, was die Schule tut, sondern wozu die Gesellschaft sie braucht.",diff:"Kritik: Konflikte, Macht und sozialer Wandel geraten leicht aus dem Blick. Dass eine Regel eine Funktion erfüllt, heißt nicht, dass sie gerecht ist."},
+  {term:"Soziales System",def:"Gefüge aufeinander bezogener Handlungen, Rollen und Institutionen, die über gemeinsame Werte und Normen zusammenwirken.",ex:"Eine Schule als System: Lehrkräfte, Schülerinnen und Schüler, Schulleitung und Regeln greifen ineinander.",diff:"Kein Bild von Menschen als Maschinen: Menschen handeln selbst, orientieren sich dabei aber an geteilten Werten und Normen."},
+  {term:"Werte und Normen",def:"Werte sind allgemeine Vorstellungen vom Wünschenswerten, z. B. Gerechtigkeit. Normen sind konkrete Verhaltensregeln, die Werte in bestimmten Situationen umsetzen.",ex:"Wert: Respekt. Norm: „Wir lassen andere ausreden.“",diff:"Werte sind abstrakt, Normen konkret. Eine Norm kann man befolgen oder brechen, einen Wert teilt man oder nicht."},
+  {term:"Sozialisation (Internalisierung)",def:"Prozess, in dem Menschen die Werte und Normen ihrer Gesellschaft übernehmen und verinnerlichen, sodass sie zu eigenen Handlungsorientierungen werden.",ex:"Ein Kind sagt irgendwann „Danke“, ohne daran erinnert zu werden.",diff:"Bloße Anpassung aus Angst vor Strafe ist noch keine Verinnerlichung."},
+  {term:"Soziale Institutionen",def:"Dauerhaft geregelte Einrichtungen, die gesellschaftliche Aufgaben erfüllen und Werte, Normen und Rollen weitergeben – z. B. Familie, Schule, Recht.",ex:"Die Schule vermittelt Wissen, aber auch Pünktlichkeit und Leistungsbereitschaft.",diff:"Eine Institution ist mehr als ein Gebäude: gemeint sind die dauerhaften Regeln und Strukturen."},
+  {term:"Gesellschaftliche Stabilität",def:"Zustand, in dem ein soziales System funktionsfähig bleibt, weil seine Teile zusammenwirken und gemeinsame Orientierungen geteilt werden.",ex:"Weil die meisten Menschen Verkehrsregeln verinnerlicht haben, funktioniert der Straßenverkehr weitgehend reibungslos.",diff:"Stabilität bedeutet nicht Stillstand oder blinden Gehorsam. Abgrenzung zu Mead: Mead fragt nach der Entstehung des Selbst, nicht nach der Stabilität des Systems."}
+ ],
+ dahrendorf:[
+  {term:"Homo sociologicus",def:"Modell des Menschen als Träger sozialer Positionen und Rollen, der ständig mit gesellschaftlichen Erwartungen konfrontiert ist. Dahrendorf nennt die Gesellschaft deshalb eine „ärgerliche Tatsache“.",ex:"Ein Mensch ist zugleich Tochter, Schülerin, Freundin und Vereinsmitglied – überall wird etwas von ihr erwartet.",diff:"Ein Modell, keine vollständige Beschreibung des Menschen. Nicht zu verwechseln mit dem Homo oeconomicus, der rational seinen Nutzen maximiert."},
+  {term:"Soziale Position",def:"Platz im Gefüge sozialer Beziehungen, den ein Mensch einnimmt – unabhängig davon, wer ihn gerade ausfüllt.",ex:"Lehrerin, Vater, Klassensprecher, Kassierer.",diff:"Die Position ist der Platz; die Rolle sind die Erwartungen an diesen Platz."},
+  {term:"Soziale Rolle",def:"Bündel von Verhaltenserwartungen, die an den Inhaber einer sozialen Position gerichtet sind.",ex:"Von einem Klassensprecher wird erwartet, dass er die Klasse vertritt und Informationen weitergibt.",diff:"Rollen legen Verhalten nicht vollständig fest: Menschen erfüllen Erwartungen unterschiedlich, weichen ab und gestalten Rollen mit."},
+  {term:"Rollenerwartungen und Sanktionen",def:"Einzelne Erwartungen von Bezugsgruppen an eine Position. Dahrendorf unterscheidet nach Verbindlichkeit: Muss-Erwartungen (meist rechtlich geregelt, harte Sanktionen), Soll-Erwartungen (verbindlich, vor allem soziale Sanktionen) und Kann-Erwartungen (freiwillig, eher positive Sanktionen wie Anerkennung).",ex:"Muss: Eine Ärztin hält die Schweigepflicht ein. Soll: Sie ist freundlich zu ihren Patienten. Kann: Sie engagiert sich ehrenamtlich in einer Beratungsstelle.",diff:"Sanktionen sind Reaktionen auf die Erfüllung oder Nichterfüllung von Erwartungen – negativ (Strafe, Kritik) oder positiv (Lob)."},
+  {term:"Intra-Rollenkonflikt",def:"Widersprüchliche Erwartungen, die an dieselbe Rolle gerichtet sind – oft von verschiedenen Bezugsgruppen.",ex:"Eine Trainerin soll laut Eltern alle Kinder gleich oft spielen lassen, laut Verein immer die Besten aufstellen.",diff:"Mehrere Gruppen bedeuten nicht automatisch einen Inter-Rollenkonflikt. Entscheidend ist: Nur eine Rolle ist betroffen."},
+  {term:"Inter-Rollenkonflikt",def:"Konflikt zwischen Erwartungen aus verschiedenen Rollen, die eine Person gleichzeitig innehat.",ex:"Als Schülerin soll sie lernen, als Freundin zum Treffen kommen – am selben Abend.",diff:"Hier sind mindestens zwei Rollen derselben Person betroffen."}
+ ],
+ mead:[
+  {term:"Symbolischer Interaktionismus",def:"Ansatz, nach dem Menschen auf der Grundlage von Bedeutungen handeln, die in Interaktion entstehen und über Symbole – vor allem Sprache – geteilt werden. Den Begriff prägte Herbert Blumer, der sich auf Mead stützt.",ex:"Ein erhobener Daumen bedeutet „gut gemacht“ – weil beide Seiten diese Bedeutung teilen.",diff:"Signifikantes Symbol: eine Geste oder ein Wort, das beim Sprecher dieselbe Bedeutung hat wie beim Hörer. So kann man die Reaktion des anderen vorwegnehmen."},
+  {term:"Entwicklung des Selbst (Rollenübernahme)",def:"Das Selbst entsteht, indem ein Mensch die Haltungen anderer sich selbst gegenüber übernimmt und sich so mit den Augen anderer betrachten kann.",ex:"Ein Kind überlegt: „Mama wäre jetzt traurig, wenn ich das kaputt mache.“",diff:"Abgrenzung zu Parsons: Mead fragt nach der Entstehung des Selbst, nicht nach der Stabilität des Systems."},
+  {term:"I und Me",def:"I: der spontane, kreative, nicht vollständig vorhersehbare Anteil des Selbst. Me: die verinnerlichten Haltungen und Erwartungen anderer – wie man sich mit den Augen anderer sieht. Das Selbst entsteht im Wechselspiel beider.",ex:"Me: „Die Gruppe erwartet, dass ich zustimme.“ I: die spontane Reaktion, trotzdem zu widersprechen.",diff:"Nicht jede eigene Handlung ist „I“, nicht jede Regel „Me“. Und das I ist nicht einfach „Freiheit“, das Me nicht einfach „Gehorsam“."},
+  {term:"Play und Game",def:"Play: Das Kind übernimmt einzelne Rollen nacheinander, meist die wichtiger Bezugspersonen. Game: Das Kind muss mehrere aufeinander bezogene Rollen und gemeinsame Regeln gleichzeitig berücksichtigen.",ex:"Play: „Mama und Kind“ spielen. Game: Fußball spielen und wissen, was jede Position gerade tun muss.",diff:"Entscheidend ist nicht, ob es ein Spiel ist, sondern ob eine einzelne Rolle oder das Zusammenspiel vieler Rollen nach Regeln im Mittelpunkt steht."},
+  {term:"Generalized other",def:"Die verallgemeinerte Haltung einer Gruppe oder Gemeinschaft, die ein Mensch verinnerlicht – „was man bei uns erwartet“.",ex:"„In unserem Team lässt man niemanden im Stich.“",diff:"Abgrenzung zum Me: Der generalized other wird Teil des Me. Der Begriff betont die Gruppe als Ganzes statt einzelner Personen."},
+  {term:"Soziale Interaktion",def:"Wechselseitig aufeinander bezogenes Handeln von Menschen, die die Reaktionen ihres Gegenübers deuten und vorwegnehmen.",ex:"Im Gespräch passt du deine nächsten Worte an die Mimik deines Gegenübers an.",diff:"Für Mead ist Interaktion der Ort, an dem das Selbst entsteht."}
+ ]
+}
+};
+</script>
+
+<!-- ================================================================
+     SPIELLOGIK
+     ================================================================ -->
+<script>
+(function(){
+"use strict";
+const D = window.SOC85_DATA, TASKS = D.tasks;
+const TH = {
+  parsons:{world:"SYSTEM CITY",person:"Talcott Parsons",theory:"Strukturfunktionalismus",desc:"Wie Werte, Normen und Institutionen das Zusammenleben stabil halten.",accent:"#36F5FF",glow:"rgba(54,245,255,.45)",ok:"SYSTEM RESTORED!",unit:"Gebäude am Netz"},
+  dahrendorf:{world:"ROLE WARS",person:"Ralf Dahrendorf",theory:"Homo sociologicus & soziale Rollen",desc:"Positionen, Rollen und Erwartungen – und was passiert, wenn sie kollidieren.",accent:"#FF3CAC",glow:"rgba(255,60,172,.45)",ok:"ROLES DECODED!",unit:"Linien entwirrt"},
+  mead:{world:"MIND MIRROR",person:"George Herbert Mead",theory:"Symbolischer Interaktionismus",desc:"Wie das Selbst durch Interaktion und die Perspektiven anderer entsteht.",accent:"#A970FF",glow:"rgba(169,112,255,.5)",ok:"MIRROR ALIGNED!",unit:"Spiegel ausgerichtet"}
+};
+const ORDER = ["parsons","dahrendorf","mead"];
+const BOSS = {accent:"#FFE66D",glow:"rgba(255,230,109,.45)"};
+const RANKS = [
+  {name:"ROOKIE",req:"Start"},
+  {name:"SOCIAL EXPLORER",req:"1 Welt abgeschlossen und 500 Punkte"},
+  {name:"THEORY HACKER",req:"2 Welten abgeschlossen und 1.300 Punkte"},
+  {name:"SOCIOLOGY ACE",req:"Final Boss besiegt und 2.200 Punkte"}
+];
+const KEY = "soc85_v1";
+let RM = false; try{ RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+
+const scr = document.getElementById("screen"), ov = document.getElementById("ov");
+const $ = s => document.querySelector(s);
+let guardUntil = 0;
+const guard = ms => { guardUntil = Date.now() + (ms||380); };
+const free = () => Date.now() >= guardUntil;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle = a => { a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const fmt = n => n.toLocaleString("de-DE");
+
+/* ---------- Zustand & Speicherung ---------- */
+function freshState(){
+  return {v:1,score:0,introSeen:false,sound:false,answered:0,correct:0,seen:[],tags:{},
+    worlds:{parsons:{done:false,best:0},dahrendorf:{done:false,best:0},mead:{done:false,best:0}},
+    boss:{done:false},
+    stats:{parsons:{n:0,first:0,second:0,fail:0},dahrendorf:{n:0,first:0,second:0,fail:0},mead:{n:0,first:0,second:0,fail:0}}};
+}
+let S = freshState();
+let storageOK = false;
+try{ localStorage.setItem("_soc85t","1"); localStorage.removeItem("_soc85t"); storageOK = true; }catch(e){}
+function save(){ if(!storageOK) return; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function load(){
+  if(!storageOK) return;
+  try{
+    const raw = localStorage.getItem(KEY); if(!raw) return;
+    const o = JSON.parse(raw); if(!o || o.v!==1) return;
+    const f = freshState();
+    S = Object.assign(f, o);
+    ORDER.forEach(k=>{ S.worlds[k] = Object.assign(f.worlds[k], (o.worlds||{})[k]); S.stats[k] = Object.assign(freshState().stats[k], (o.stats||{})[k]); });
+    S.boss = Object.assign({done:false}, o.boss);
+    if(!Array.isArray(S.seen)) S.seen = [];
+    if(typeof S.tags!=="object" || !S.tags) S.tags = {};
+  }catch(e){ S = freshState(); }
+}
+
+/* ---------- Hilfsfunktionen ---------- */
+function setAccent(k){
+  const c = k==="boss" ? BOSS : (TH[k] || TH.parsons);
+  const st = document.documentElement.style;
+  st.setProperty("--accent", c.accent); st.setProperty("--glow", c.glow);
+}
+function unlocked(w){
+  if(w==="parsons") return true;
+  if(w==="dahrendorf") return S.worlds.parsons.done;
+  if(w==="mead") return S.worlds.dahrendorf.done;
+  if(w==="boss") return ORDER.every(k=>S.worlds[k].done);
+  return false;
+}
+function worldsDone(){ return ORDER.filter(k=>S.worlds[k].done).length; }
+function rankIdx(){
+  const w = worldsDone();
+  if(S.boss.done && S.score>=2200) return 3;
+  if(w>=2 && S.score>=1300) return 2;
+  if(w>=1 && S.score>=500) return 1;
+  return 0;
+}
+function mastery(k){
+  const st = S.stats[k], n = st.n;
+  const ratio = n ? (st.first + 0.5*st.second)/n : 0;
+  let label, cls;
+  if(n<3){ label = n ? "noch zu wenig Daten" : "noch nicht bearbeitet"; cls="d"; }
+  else if(ratio>=0.8){ label="sicher angewendet"; cls="a"; }
+  else if(ratio>=0.5){ label="überwiegend verstanden"; cls="b"; }
+  else { label="noch zu wiederholen"; cls="c"; }
+  return {n, ratio, label, cls, st};
+}
+function beep(type){
+  if(!S.sound) return;
+  try{
+    window._ac = window._ac || new (window.AudioContext || window.webkitAudioContext)();
+    const ac = window._ac; if(ac.state==="suspended") ac.resume();
+    const seq = {ok:[[660,.07],[880,.1]],bad:[[260,.1],[200,.14]],click:[[540,.03]],win:[[523,.08],[659,.08],[784,.08],[1046,.18]]}[type] || [[440,.05]];
+    let t = ac.currentTime + .01;
+    seq.forEach(([f,d])=>{
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "square"; o.frequency.value = f;
+      g.gain.setValueAtTime(.05, t); g.gain.exponentialRampToValueAtTime(.0001, t+d);
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+d+.02); t += d;
+    });
+  }catch(e){}
+}
+function glitch(){ if(RM) return; const a=document.getElementById("app"); a.classList.remove("glitch"); void a.offsetWidth; a.classList.add("glitch"); setTimeout(()=>a.classList.remove("glitch"),480); }
+function confetti(){
+  if(RM) return;
+  const cols=["#36F5FF","#FF3CAC","#A970FF","#FFE66D","#66FF99"];
+  for(let i=0;i<46;i++){
+    const d=document.createElement("div"); d.className="cf";
+    d.style.left=(Math.random()*100)+"vw"; d.style.background=pick(cols);
+    d.style.animationDuration=(1.6+Math.random()*1.4)+"s"; d.style.animationDelay=(Math.random()*.4)+"s";
+    document.body.appendChild(d); setTimeout(()=>d.remove(),3400);
+  }
+}
+function floatPts(p){
+  if(RM) return;
+  const s=document.getElementById("hudScore"); if(!s) return;
+  const r=s.getBoundingClientRect(), el=document.createElement("div");
+  el.className="float"; el.textContent="+"+p;
+  el.style.left=Math.max(8,r.left-10)+"px"; el.style.top=(r.bottom+4)+"px";
+  document.body.appendChild(el); setTimeout(()=>el.remove(),1200);
+}
+function stars(){
+  const bg=document.getElementById("bg");
+  for(let i=0;i<70;i++){
+    const s=document.createElement("div"); s.className="star"+(i%5===0?" tw":"");
+    s.style.left=(Math.random()*100)+"%"; s.style.top=(Math.random()*60)+"%";
+    if(i%7===0){ s.style.width="3px"; s.style.height="3px"; }
+    s.style.animationDelay=(Math.random()*5)+"s";
+    bg.appendChild(s);
+  }
+}
+function soundIcon(){ return S.sound ? "🔊" : "🔇"; }
+function soundLabel(){ return S.sound ? "🔊 TON: AN" : "🔇 TON: AUS"; }
+function refreshSoundButtons(){
+  const h=document.getElementById("hudSound"); if(h) h.textContent=soundIcon();
+  document.querySelectorAll("[data-sl]").forEach(b=>b.textContent=soundLabel());
+}
+
+/* ---------- Overlay ---------- */
+function openOv(html){ ov.innerHTML=html; ov.classList.add("open"); ov.scrollTop=0; }
+function closeOv(){ ov.classList.remove("open"); ov.innerHTML=""; }
+function confirmBox(text, yesAct, yesLabel){
+  openOv(`<div class="ovbox confirm"><h2 class="big" style="font-size:clamp(18px,3vw,28px);margin-bottom:20px">SICHER?</h2><p>${esc(text)}</p>
+  <div class="menu"><button class="btn primary" data-act="${yesAct}">${esc(yesLabel||"JA")}</button><button class="btn ghost" data-act="closeov">ABBRECHEN</button></div></div>`);
+}
+
+/* ---------- Bildschirme ---------- */
+function renderStart(){
+  run=null; document.body.classList.remove("playing"); setAccent("parsons"); closeOv();
+  const logo=[..."SOCIOLOGY ’85"].map((ch,i)=>`<span style="animation-delay:${(i*0.07).toFixed(2)}s">${ch===" "?"&nbsp;":esc(ch)}</span>`).join("");
+  const has=S.answered>0;
+  scr.innerHTML=`<div class="center"><div class="cab">
+    <h1 class="logo" aria-label="SOCIOLOGY ’85">${logo}</h1>
+    <p class="subtitle" style="margin-top:14px">THE SOCIALIZATION ARCADE</p>
+    <p class="coin" style="margin-top:22px">INSERT COIN. UNDERSTAND SOCIETY.</p>
+    <div class="menu" style="margin:28px auto 0">
+      ${has?`<button class="btn primary" data-act="map">▶ WEITERSPIELEN</button><button class="btn" data-act="newgame">NEUES SPIEL</button>`:`<button class="btn primary" data-act="start">▶ START GAME</button>`}
+      <button class="btn" data-act="help">? HOW TO PLAY</button>
+      <button class="btn" data-act="db">▤ THEORY DATABASE</button>
+      <button class="btn ghost" data-act="sound" data-sl>${soundLabel()}</button>
+    </div></div>
+    <p class="footnote">„Insert Coin“ ist nur Retro-Deko: Das Spiel ist kostenlos und braucht keine Anmeldung. Für die EF · Sozialisationstheorien nach Parsons, Dahrendorf und Mead.</p>
+  </div>`;
+  scr.scrollTop=0;
+}
+function renderIntro(){
+  document.body.classList.remove("playing"); glitch();
+  scr.innerHTML=`<div class="center"><div class="cab" style="max-width:760px">
+    <p class="subtitle">LOADING SOCIETY.EXE …</p>
+    <p class="pix" style="font-size:clamp(15px,2.8vw,24px);margin:26px 0;line-height:1.7">Drei Theorien.<br>Drei Welten.<br>Eine Gesellschaft, die verstanden werden will.</p>
+    <p style="max-width:560px;margin:0 auto 26px">Regeln werden nicht mehr verstanden, Rollen kollidieren, niemand weiß mehr, wie das eigene Selbst entsteht. Repariere SYSTEM CITY, entwirre ROLE WARS und richte MIND MIRROR aus – dann wartet der Final Boss.</p>
+    <button class="btn primary" data-act="intro-done">ZUR WELTKARTE ▶</button>
+  </div></div>`;
+  scr.scrollTop=0;
+}
+function renderMap(){
+  run=null; document.body.classList.remove("playing"); setAccent("parsons"); closeOv();
+  const ri=rankIdx(), next=RANKS[ri+1];
+  const bars=ORDER.map(k=>{
+    const m=mastery(k), t=TH[k];
+    return `<div class="mb" style="--c:${t.accent}"><span class="vt" style="font-size:22px;color:${t.accent}">${t.person}</span> <span class="dim">· ${S.worlds[k].done?"abgeschlossen":"offen"} · ${m.label}</span><div class="bar" role="img" aria-label="${Math.round(m.ratio*100)} Prozent"><i style="width:${Math.round(m.ratio*100)}%"></i></div></div>`;
+  }).join("");
+  const cards=ORDER.map((k,i)=>{
+    const t=TH[k], w=S.worlds[k], un=unlocked(k);
+    const prev=i>0?TH[ORDER[i-1]].world:"";
+    const status=w.done?'<span class="status done">✓ CLEARED</span>':un?'<span class="status">READY</span>':'<span class="status">🔒 LOCKED</span>';
+    return `<article class="card ${un?"":"locked"}" style="--c:${t.accent};--cg:${t.glow}">
+      ${status}
+      <h2>LEVEL ${i+1} · ${t.world}</h2>
+      <div class="who">${t.person}<br><span class="dim" style="font-size:21px">${t.theory}</span></div>
+      <p class="desc">${t.desc}</p>
+      <div class="dim" style="font-size:16px">${w.done?`Bester Lauf: ${fmt(w.best)} Punkte`:un?"5 Aufgaben · kein Zeitdruck":`Freischalten: Schließe ${prev} ab.`}</div>
+      <button class="btn ${un&&!w.done?"primary":""}" data-act="world" data-w="${k}" ${un?"":"disabled"}>${w.done?"NOCHMAL SPIELEN":un?"LEVEL STARTEN ▶":"GESPERRT"}</button>
+    </article>`;
+  }).join("");
+  const bu=unlocked("boss");
+  const boss=`<article class="card boss ${bu?"":"locked"}">
+      ${S.boss.done?'<span class="status done">✓ BESIEGT</span>':bu?'<span class="status">READY</span>':'<span class="status">🔒 LOCKED</span>'}
+      <h2>FINAL BOSS · DECODE SOCIETY</h2>
+      <p class="desc">Fünf gemischte Fälle. Entscheide jeweils, welche Theorie die Situation am besten erklärt – und löse das Glitch-Gebilde aus falschen Zuordnungen auf.</p>
+      <div class="dim" style="font-size:16px">${bu?"Alle drei Welten sind abgeschlossen.":"Freischalten: Schließe alle drei Welten ab."}</div>
+      <button class="btn ${bu&&!S.boss.done?"primary":""}" data-act="boss" ${bu?"":"disabled"}>${S.boss.done?"NOCHMAL ANTRETEN":bu?"BOSS STARTEN ▶":"GESPERRT"}</button>
+    </article>`;
+  scr.innerHTML=`<div class="wrap">
+    <div class="maphead"><h1>ARCADE MAP</h1>
+      <div class="rankbox">RANG <b>${RANKS[ri].name}</b><br>SCORE <b>${fmt(S.score)}</b>${next?`<br><span class="dim" style="font-size:19px">Nächster Rang: ${next.name} – ${next.req}</span>`:""}</div></div>
+    <div class="minibars">${bars}</div>
+    <div class="cards">${cards}${boss}</div>
+    <div class="maptools">
+      ${S.answered>0?'<button class="btn" data-act="results">▦ LERNSTAND</button>':""}
+      <button class="btn" data-act="db">▤ THEORY DATABASE</button>
+      <button class="btn" data-act="help">? HOW TO PLAY</button>
+      <button class="btn ghost" data-act="arcade">STARTBILDSCHIRM</button>
+    </div>
+  </div>`;
+  scr.scrollTop=0;
+}
+
+/* ---------- Spielrunden ---------- */
+let run=null;
+const cur=()=>run.queue[run.idx];
+function choose(pool){ const un=pool.filter(t=>!S.seen.includes(t.id)); return pick(un.length?un:pool); }
+function startWorld(w){
+  if(!unlocked(w)) return;
+  const q=[];
+  for(let st=1;st<=5;st++) q.push(choose(TASKS.filter(t=>t.theory===w && t.stage===st)));
+  beginRun({mode:"world",key:w,queue:q});
+}
+function startBoss(){
+  if(!unlocked("boss")) return;
+  const pool=TASKS.filter(t=>t.theory==="boss");
+  let q=ORDER.map(k=>choose(pool.filter(t=>t.solves===k)));
+  q=q.concat(shuffle(pool.filter(t=>!q.includes(t))).slice(0,2));
+  beginRun({mode:"boss",key:"boss",queue:shuffle(q)});
+}
+function startPractice(){
+  const q=[]; const add=t=>{ if(t && !q.includes(t) && q.length<5) q.push(t); };
+  const freshFirst=list=>shuffle(list).sort((a,b)=>(S.seen.includes(a.id)?1:0)-(S.seen.includes(b.id)?1:0));
+  Object.keys(S.tags).sort((a,b)=>S.tags[b]-S.tags[a]).forEach(tag=>{
+    const c=freshFirst(TASKS.filter(t=>t.tag===tag && t.theory!=="boss"));
+    add(c[0]); if(S.tags[tag]>1) add(c[1]);
+  });
+  ORDER.filter(k=>{ const m=mastery(k); return m.n>0 && m.ratio<0.8; }).sort((a,b)=>mastery(a).ratio-mastery(b).ratio)
+    .forEach(k=>freshFirst(TASKS.filter(t=>t.theory===k)).slice(0,2).forEach(add));
+  let note="";
+  if(!q.length){ note="Keine Schwachstellen erkannt – hier ist ein gemischtes Bonustraining."; freshFirst(TASKS.filter(t=>t.theory!=="boss")).slice(0,5).forEach(add); }
+  beginRun({mode:"practice",key:"practice",queue:q,note});
+}
+function beginRun(o){
+  closeOv();
+  run={mode:o.mode,key:o.key,queue:o.queue,core:o.queue.length,idx:0,levelScore:0,reviews:0,qTags:{},log:[],note:o.note||""};
+  document.body.classList.add("playing");
+  setAccent(o.mode==="practice"?"mead":o.key);
+  glitch(); newTask(); renderTask(); guard(500);
+}
+function newTask(){
+  const t=cur();
+  Object.assign(run,{att:0,sel:null,wrong:[],locked:false,hint:false,assign:{},fixed:{},wrongItems:[],pickI:0,addedReview:false,
+    order:(t.type==="mc"||t.type==="compare")?shuffle(t.options.map((_,i)=>i)):null});
+}
+function stageName(t){
+  if(run.mode==="boss") return `FINAL BOSS · FALL ${run.idx+1}`;
+  if(run.idx>=run.core) return "REPLAY · Gezielte Wiederholung";
+  if(run.mode==="practice") return `TRAINING · ${t.theory==="boss"?"Gemischt":TH[t.theory].person}`;
+  return `STAGE ${t.stage} · ${D.stages[t.stage]}`;
+}
+function renderTask(){
+  const t=cur();
+  scr.innerHTML=`<div class="wrap"><div class="tg">
+    <section>
+      <div class="scene" id="scene">${scene()}</div>
+      <div class="panel">
+        <div class="stage">${esc(stageName(t))}</div>
+        ${run.note&&run.idx===0?`<p class="small">${esc(run.note)}</p>`:""}
+        ${t.situation?`<div class="situation">${esc(t.situation)}</div>`:""}
+        <p class="question" id="qtext">${esc(t.q)}</p>
+        ${t.type==="assign"?'<p class="instr">Tippe eine Beschreibung an und dann unten den passenden Begriff. Zum Ändern tippst du die Beschreibung einfach noch einmal an.</p>':""}
+        <div class="tools"><button class="tbtn" data-act="hint" id="hintBtn">💡 HINWEIS</button><button class="tbtn" data-act="db">▤ DATABASE</button></div>
+        <div class="hintbox" id="hintbox" hidden>${esc(t.hint)}</div>
+      </div>
+    </section>
+    <section>
+      <div class="answers" id="answers" role="group" aria-labelledby="qtext"></div>
+      <button class="btn primary check" id="check" data-act="check" disabled>ANTWORT PRÜFEN</button>
+      <div id="fb"></div>
+    </section>
+  </div></div>`;
+  renderAnswers(); updateHud(); scr.scrollTop=0;
+}
+function optClass(key,t){
+  let c="opt", dis=run.locked;
+  const isWrong=run.wrong.some(w=>String(w)===String(key));
+  if(isWrong){ c+=" wrong out"; dis=true; }
+  if(String(run.sel)===String(key)) c+=" sel";
+  if(run.locked && String(key)===String(t.correct)) c+=" right";
+  if(run.locked && String(run.sel)===String(key) && String(key)!==String(t.correct)) c+=" wrong";
+  return {c,dis};
+}
+function renderAnswers(){
+  const t=cur(), box=document.getElementById("answers"); if(!box) return;
+  let h="";
+  if(t.type==="mc"||t.type==="compare"){
+    const L=t.type==="mc"?"ABCD":"AB";
+    run.order.forEach((oi,pos)=>{
+      const {c,dis}=optClass(oi,t);
+      h+=`<button class="${c}" data-act="opt" data-i="${oi}" ${dis?"disabled":""} aria-pressed="${run.sel===oi}"><span class="badge">${L[pos]}</span><span class="ot">${t.type==="compare"?"<b>Aussage "+L[pos]+":</b> ":""}${esc(t.options[oi])}</span></button>`;
+    });
+  } else if(t.type==="theory"){
+    ORDER.forEach((k,pos)=>{
+      const {c,dis}=optClass(k,t);
+      h+=`<button class="${c}" data-act="opt" data-i="${k}" ${dis?"disabled":""} aria-pressed="${run.sel===k}" style="--accent:${TH[k].accent}"><span class="badge">${pos+1}</span><span class="ot"><span class="th-name">${TH[k].person}</span><span class="th-sub">${TH[k].theory}</span></span></button>`;
+    });
+  } else if(t.type==="assign"){
+    t.items.forEach((it,i)=>{
+      const a=run.assign[i]; let c="opt item";
+      const fixed=!!run.fixed[i];
+      if(!run.locked && !fixed && run.pickI===i) c+=" pick";
+      if(fixed || (run.locked && a===it.cat)) c+=" right";
+      if(run.locked && a!==it.cat) c+=" wrong";
+      const chip = a!==undefined ? `<span class="chip">→ ${esc(a)}</span>` : (run.wrongItems.includes(i)?'<span class="chip empty">neu zuordnen</span>':'<span class="chip empty">noch offen</span>');
+      const fix = run.locked && a!==it.cat ? ` <span class="chip okc">richtig: ${esc(it.cat)}</span>` : "";
+      h+=`<button class="${c}" data-act="item" data-i="${i}" ${run.locked||fixed?"disabled":""}><span class="badge">${i+1}</span><span class="ot">${esc(it.text)}<br>${chip}${fix}</span></button>`;
+    });
+    h+=`<div class="cats">${t.cats.map(c=>`<button class="btn cat" data-act="cat" data-c="${esc(c)}" ${run.locked?"disabled":""}>${esc(c)}</button>`).join("")}</div>`;
+  }
+  box.innerHTML=h;
+  updateCheck();
+}
+function updateCheck(){
+  const b=document.getElementById("check"); if(!b) return;
+  const t=cur();
+  if(run.locked){ b.style.display="none"; return; }
+  b.style.display="";
+  const ready = t.type==="assign" ? Object.keys(run.assign).length===t.items.length : run.sel!==null;
+  b.disabled=!ready;
+}
+function selOpt(v){
+  if(!run||run.locked) return;
+  const t=cur();
+  run.sel = t.type==="theory" ? v : Number(v);
+  beep("click"); renderAnswers();
+}
+function selItem(i){
+  if(!run||run.locked||run.fixed[i]) return;
+  run.pickI=i; delete run.assign[i]; beep("click"); renderAnswers();
+}
+function selCat(c){
+  if(!run||run.locked) return;
+  const t=cur();
+  const open=t.items.map((_,i)=>i).filter(i=>!run.fixed[i] && run.assign[i]===undefined);
+  let target = (run.pickI!==null && !run.fixed[run.pickI] && run.assign[run.pickI]===undefined) ? run.pickI : open[0];
+  if(target===undefined) return;
+  run.assign[target]=c;
+  const rest=t.items.map((_,i)=>i).filter(i=>!run.fixed[i] && run.assign[i]===undefined);
+  run.pickI = rest.length ? (rest.find(i=>i>target) ?? rest[0]) : null;
+  beep("click"); renderAnswers();
+}
+function showHint(){
+  if(!run) return;
+  run.hint=true;
+  const hb=document.getElementById("hintbox"), btn=document.getElementById("hintBtn");
+  if(hb) hb.hidden=false; if(btn) btn.disabled=true;
+}
+function check(){
+  if(!run||run.locked||!free()) return;
+  guard(320);
+  const t=cur(); let correct;
+  if(t.type==="assign"){
+    if(Object.keys(run.assign).length<t.items.length) return;
+    correct=t.items.every((it,i)=>run.assign[i]===it.cat);
+  } else {
+    if(run.sel===null) return;
+    correct=String(run.sel)===String(t.correct);
+  }
+  run.att++;
+  if(correct){ resolve(run.att===1?"first":"second"); return; }
+  if(run.att===1){
+    firstMiss(t);
+    if(t.type==="assign"){
+      run.wrongItems=[];
+      t.items.forEach((it,i)=>{ if(run.assign[i]===it.cat) run.fixed[i]=true; else { delete run.assign[i]; run.wrongItems.push(i); } });
+      run.pickI=run.wrongItems[0];
+    } else { run.wrong.push(run.sel); run.sel=null; }
+    renderAnswers(); showTry(t); beep("bad");
+    const a=document.getElementById("answers"); if(a&&!RM){ a.classList.remove("jolt"); void a.offsetWidth; a.classList.add("jolt"); }
+    return;
+  }
+  resolve("fail");
+}
+function firstMiss(t){
+  S.tags[t.tag]=(S.tags[t.tag]||0)+1;
+  if(run.reviews>=2 || run.qTags[t.tag]) return;
+  const inQ=id=>run.queue.some(x=>x.id===id);
+  const c=TASKS.filter(x=>x.tag===t.tag && x.id!==t.id && !inQ(x.id) && x.theory!=="boss")
+    .map(x=>({x,s:(x.stage===0?0:2)+(S.seen.includes(x.id)?1:0)+Math.random()*.5}))
+    .sort((a,b)=>a.s-b.s);
+  if(c.length){ run.queue.push(c[0].x); run.reviews++; run.qTags[t.tag]=1; run.addedReview=true; }
+  save();
+}
+function showTry(t){
+  const fb=document.getElementById("fb");
+  fb.innerHTML=`<div class="panel fb bad"><h3>NOT QUITE – TRY AGAIN.</h3><p>${esc(t.hint)}</p>
+    ${t.type==="assign"?'<p class="small">Richtig zugeordnete Beschreibungen sind grün und bleiben stehen.</p>':""}
+    ${run.addedReview?'<p class="small">Eine ähnliche Aufgabe kommt am Ende des Levels noch einmal – zum Festigen.</p>':""}</div>`;
+  run.addedReview=false;
+  updateHud(); scrollTo(fb);
+}
+function okTitle(){
+  if(run.mode==="boss") return "GLITCH DELETED!";
+  if(run.mode==="practice") return "SKILL UPGRADED!";
+  return TH[run.key].ok;
+}
+function resolve(res){
+  run.locked=true;
+  const t=cur(), pts=res==="first"?100:res==="second"?50:0;
+  S.score+=pts; run.levelScore+=pts;
+  const th=t.theory==="boss"?t.solves:t.theory, st=S.stats[th];
+  st.n++; st[res]++; S.answered++; if(res!=="fail") S.correct++;
+  if(!S.seen.includes(t.id)) S.seen.push(t.id);
+  run.log.push({id:t.id,res,review:run.idx>=run.core});
+  if(t.type!=="assign" && res!=="fail") run.sel=t.correct;
+  save();
+  renderAnswers(); updateHud();
+  const sc=document.getElementById("scene"); if(sc) sc.innerHTML=scene();
+  const last=run.idx===run.queue.length-1;
+  const title=res==="fail"?"SIGNAL LOST – SO GEHT’S":okTitle();
+  const fb=document.getElementById("fb");
+  fb.innerHTML=`<div class="panel fb ${res==="fail"?"info":"good"} ${res!=="fail"&&!RM?"pulse":""}">
+    <h3>${title}</h3>
+    <div class="pts">${pts?"+"+pts+" PUNKTE":"0 PUNKTE"}${res==="second"?" · 2. Versuch":""}</div>
+    ${res==="fail"?'<p class="small">Die richtige Lösung ist grün markiert.</p>':""}
+    <p>${esc(t.explain)}</p>
+    <button class="btn primary" data-act="next">${last?(run.mode==="boss"?"AUSWERTUNG ▶":"LEVEL ABSCHLIESSEN ▶"):"WEITER ▶"}</button>
+  </div>`;
+  if(pts) floatPts(pts);
+  beep(res==="fail"?"bad":"ok");
+  guard(450); scrollTo(fb);
+}
+function scrollTo(el){ try{ el.scrollIntoView({behavior:RM?"auto":"smooth",block:"nearest"}); }catch(e){ el.scrollIntoView(false); } }
+function next(){
+  if(!run||!run.locked||!free()) return;
+  guard(450);
+  run.idx++;
+  if(run.idx>=run.queue.length){ finish(); return; }
+  newTask(); renderTask();
+}
+function updateHud(){
+  if(!run) return;
+  const name = run.mode==="boss" ? "FINAL BOSS – DECODE SOCIETY" : run.mode==="practice" ? "TRAINING – WEAK AREAS" : `${TH[run.key].world} · LEVEL ${ORDER.indexOf(run.key)+1}`;
+  $("#hudWorld").textContent=name;
+  $("#hudStage").textContent=`Aufgabe ${run.idx+1} von ${run.queue.length}`;
+  $("#hudScore").textContent=fmt(S.score);
+  const left=run.queue.length-run.idx-(run.locked?1:0);
+  $("#hudLeft").textContent = left>0 ? `noch ${left} offen` : "geschafft";
+  $("#prog").innerHTML=run.queue.map((t,i)=>{
+    const l=run.log[i]; let c="seg";
+    if(l) c+= l.res==="fail"?" miss":" done"; else if(i===run.idx) c+=" cur";
+    if(i>=run.core) c+=" rv";
+    return `<span class="${c}"></span>`;
+  }).join("");
+  refreshSoundButtons();
+}
+function finish(){
+  const coreLog=run.log.filter(l=>!l.review);
+  const first=coreLog.filter(l=>l.res==="first").length, second=coreLog.filter(l=>l.res==="second").length, fail=coreLog.filter(l=>l.res==="fail").length;
+  const rv=run.log.filter(l=>l.review);
+  let bonus=0, firstClear=false;
+  if(run.mode==="world"){
+    const w=S.worlds[run.key]; firstClear=!w.done;
+    if(firstClear){ bonus=200; S.score+=200; w.done=true; }
+    w.best=Math.max(w.best, run.levelScore+bonus);
+  }
+  if(run.mode==="boss"){
+    if(!S.boss.done){ bonus=150; S.score+=150; }
+    S.boss.done=true;
+  }
+  save(); confetti(); beep("win");
+  if(run.mode==="boss"){ run=null; renderResults(true, bonus); return; }
+  if(run.mode==="practice"){ run=null; renderResults(false,0,`Training beendet: ${first+second} von ${coreLog.length} Aufgaben gelöst.`); return; }
+  const k=run.key, t=TH[k], ni=ORDER.indexOf(k)+1, nk=ORDER[ni];
+  const repaired=Math.min(5,first+second);
+  document.body.classList.remove("playing");
+  let nextBtn="";
+  if(nk && unlocked(nk) && !S.worlds[nk].done) nextBtn=`<button class="btn primary" data-act="world" data-w="${nk}">NÄCHSTE WELT: ${TH[nk].world} ▶</button>`;
+  else if(unlocked("boss") && !S.boss.done) nextBtn=`<button class="btn primary" data-act="boss">FINAL BOSS STARTEN ▶</button>`;
+  const unlockMsg = firstClear && nk ? `<p class="vt" style="font-size:26px;color:var(--yel)">🔓 ${TH[nk].world} ist jetzt freigeschaltet.</p>` : (firstClear && unlocked("boss") ? `<p class="vt" style="font-size:26px;color:var(--yel)">🔓 Der FINAL BOSS ist jetzt freigeschaltet.</p>` : "");
+  run=null;
+  scr.innerHTML=`<div class="center">
+    <h1 class="big">LEVEL CLEAR!</h1>
+    <p class="subtitle" style="color:${t.accent}">${t.world} · ${t.person}</p>
+    <div class="statgrid">
+      <div class="stat"><span class="n">${repaired}/5</span><span class="l">${t.unit}</span></div>
+      <div class="stat"><span class="n">${first}</span><span class="l">beim ersten Versuch</span></div>
+      <div class="stat"><span class="n">${second}</span><span class="l">beim zweiten Versuch</span></div>
+      <div class="stat"><span class="n">${fail}</span><span class="l">mit Erklärung gelöst</span></div>
+      ${rv.length?`<div class="stat"><span class="n">${rv.filter(l=>l.res!=="fail").length}/${rv.length}</span><span class="l">Wiederholungen gelöst</span></div>`:""}
+      <div class="stat"><span class="n">${bonus?"+"+bonus:"–"}</span><span class="l">${bonus?"Bonus für den Abschluss":"Bonus gibt es nur beim ersten Abschluss"}</span></div>
+      <div class="stat"><span class="n">${fmt(S.score)}</span><span class="l">Gesamtpunkte · Rang ${RANKS[rankIdx()].name}</span></div>
+    </div>
+    ${unlockMsg}
+    <div class="menu">${nextBtn}<button class="btn" data-act="map">ZUR WELTKARTE</button></div>
+  </div>`;
+  scr.scrollTop=0;
+}
+
+/* ---------- Auswertung ---------- */
+function renderResults(bossJustWon, bonus, note){
+  run=null; document.body.classList.remove("playing"); closeOv();
+  setAccent(S.boss.done?"boss":"parsons");
+  const ri=rankIdx();
+  const ranks=RANKS.map((r,i)=>`<span class="rk ${i<=ri?"on":""} ${i===ri?"now":""}">${r.name}</span>`).join("");
+  const rows=ORDER.map(k=>{
+    const m=mastery(k), t=TH[k], st=m.st;
+    return `<div class="th-row" style="--c:${t.accent}">
+      <div class="top"><span class="nm">${t.person} · ${t.world}</span><span class="lv ${m.cls}">${m.label}</span></div>
+      <div class="bar" style="margin:8px 0" role="img" aria-label="${Math.round(m.ratio*100)} Prozent"><i style="width:${Math.round(m.ratio*100)}%"></i></div>
+      <div class="small">${st.n} Aufgaben bearbeitet · ${st.first} beim ersten Versuch · ${st.second} beim zweiten · ${st.fail} mit Erklärung · Welt ${S.worlds[k].done?"abgeschlossen":"offen"}</div>
+    </div>`;
+  }).join("");
+  const tags=Object.keys(S.tags).filter(k=>S.tags[k]>0).sort((a,b)=>S.tags[b]-S.tags[a]);
+  const miscon = tags.length
+    ? `<ul>${tags.map(k=>`<li>${esc(D.tagLabels[k]||k)} <span class="dim">(${S.tags[k]}× beim ersten Versuch daneben)</span></li>`).join("")}</ul>`
+    : `<p>Keine wiederkehrenden Verwechslungen erkannt.</p>`;
+  const strong=ORDER.filter(k=>mastery(k).cls==="a");
+  const strengths = strong.length
+    ? `<ul>${strong.map(k=>`<li>${TH[k].person}: ${S.stats[k].first} von ${S.stats[k].n} Aufgaben beim ersten Versuch richtig.</li>`).join("")}</ul>`
+    : `<p>Noch nicht genug sichere Treffer, um Stärken belastbar zu benennen.</p>`;
+  const rec=[];
+  tags.slice(0,3).forEach(tag=>{ const d=D.tagDb[tag]; if(d) rec.push(d); });
+  ORDER.filter(k=>mastery(k).cls==="c").forEach(k=>rec.push([k,0]));
+  const seenRec={}; const recHtml=rec.filter(([k,e])=>{ const key=k+e; if(seenRec[key]) return false; seenRec[key]=1; return true; })
+    .map(([k,e])=>`<li><button class="linkbtn" data-act="dbgo" data-t="${k}" data-e="${e}">▤ ${esc(D.db[k][e].term)} (${TH[k].person})</button></li>`).join("");
+  scr.innerHTML=`<div class="res">
+    <div style="text-align:center">
+      <h1 class="big">${S.boss.done?"CONGRATULATIONS, THEORY MASTER!":"ZWISCHENSTAND"}</h1>
+      ${bossJustWon?`<p class="vt" style="font-size:26px;color:var(--yel);margin-top:12px">Das Glitch-Gebilde ist aufgelöst.${bonus?" +"+bonus+" Bonuspunkte.":""}</p>`:""}
+      ${note?`<p class="vt" style="font-size:26px;color:var(--yel);margin-top:12px">${esc(note)}</p>`:""}
+    </div>
+    <div class="statgrid" style="max-width:none">
+      <div class="stat"><span class="n">${fmt(S.score)}</span><span class="l">Gesamtpunkte</span></div>
+      <div class="stat"><span class="n">${S.correct}/${S.answered}</span><span class="l">Aufgaben gelöst (1. oder 2. Versuch)</span></div>
+      <div class="stat"><span class="n">${worldsDone()}/3</span><span class="l">Welten abgeschlossen${S.boss.done?" · Boss besiegt":""}</span></div>
+    </div>
+    <div class="panel"><h2>ERREICHTE RÄNGE</h2><div class="ranks">${ranks}</div></div>
+    <div class="panel"><h2>FORTSCHRITT PRO THEORIE</h2>${rows}
+      <p class="small" style="margin-top:12px">Grundlage sind nur die hier bearbeiteten Aufgaben. Erster Versuch zählt voll, zweiter halb. Ab 80 % „sicher angewendet“, ab 50 % „überwiegend verstanden“. Unter drei Aufgaben gibt es keine Einschätzung. Das ist eine Orientierung, keine Note.</p></div>
+    <div class="panel"><h2>HÄUFIGE STOLPERSTEINE</h2>${miscon}</div>
+    <div class="panel"><h2>PERSÖNLICHE STÄRKEN</h2>${strengths}</div>
+    <div class="panel"><h2>EMPFOHLENE WIEDERHOLUNG</h2>${recHtml?`<ul style="list-style:none;padding:0">${recHtml}</ul>`:"<p>Aktuell keine gezielte Wiederholung nötig. Für Sicherheit: Spiel eine Welt noch einmal – es kommen andere Aufgabenvarianten.</p>"}</div>
+    <div class="resbtns">
+      <button class="btn primary" data-act="again">↻ PLAY AGAIN</button>
+      <button class="btn" data-act="weak">◎ REVISIT WEAK AREAS</button>
+      <button class="btn" data-act="arcade">RETURN TO ARCADE</button>
+      ${S.boss.done?"":'<button class="btn ghost" data-act="map">ZUR WELTKARTE</button>'}
+    </div>
+  </div>`;
+  scr.scrollTop=0;
+}
+
+/* ---------- Szenen (SVG) ---------- */
+function scene(){
+  if(!run) return "";
+  const solved=Math.min(5, run.log.filter(l=>l.res!=="fail").length);
+  let svg, cap;
+  if(run.mode==="boss"){ svg=bossScene(solved); cap=`${solved}/5 Glitch-Blöcke aufgelöst`; }
+  else if(run.mode==="practice"){ svg=practiceScene(solved); cap=`${solved}/${Math.min(5,run.core)} Skills geladen`; }
+  else if(run.key==="parsons"){ svg=parsonsScene(solved); cap=`${solved}/5 ${TH.parsons.unit}`; }
+  else if(run.key==="dahrendorf"){ svg=dahrendorfScene(solved); cap=`${solved}/5 ${TH.dahrendorf.unit}`; }
+  else { svg=meadScene(solved); cap=`${solved}/5 ${TH.mead.unit}`; }
+  return svg+`<div class="scene-cap">${cap}</div>`;
+}
+function parsonsScene(s){
+  const xs=[30,145,260,375,490], hs=[62,90,54,98,74]; let g="";
+  for(let i=0;i<4;i++){
+    const on=i<s && i+1<s;
+    g+=`<line x1="${xs[i]+40}" y1="${120-hs[i]}" x2="${xs[i+1]+40}" y2="${120-hs[i+1]}" stroke="${on?"#36F5FF":"#3b4170"}" stroke-width="2" ${on?'class="flow"':'stroke-dasharray="3 7"'}/>`;
+  }
+  xs.forEach((x,i)=>{
+    const h=hs[i], on=i<s;
+    g+=`<rect x="${x}" y="${120-h}" width="80" height="${h}" fill="${on?"rgba(54,245,255,.12)":"rgba(40,40,70,.55)"}" stroke="${on?"#36F5FF":"#4a4f7a"}" stroke-width="2"/>`;
+    for(let r=0;r*18+12<h-6;r++) for(let c=0;c<3;c++){
+      const lit=on && ((r+c+i)%3!==0);
+      g+=`<rect x="${x+10+c*22}" y="${120-h+10+r*18}" width="12" height="9" fill="${lit?((r+c)%2?"#FFE66D":"#36F5FF"):"#262a48"}"/>`;
+    }
+    g+=`<circle cx="${x+40}" cy="${120-h-6}" r="3" fill="${on?"#66FF99":"#4a4f7a"}"/>`;
+  });
+  g+=`<line x1="0" y1="121" x2="600" y2="121" stroke="#36F5FF" stroke-width="2" opacity=".6"/>`;
+  return `<svg viewBox="0 0 600 126" role="img" aria-label="System City: ${s} von 5 Gebäuden wieder am Netz">${g}</svg>`;
+}
+function dahrendorfScene(s){
+  const icons=["🎒","❤️","🏠","⏰","⚠️"]; let g="";
+  for(let i=0;i<5;i++){
+    const y=16+i*23, on=i<s, col=i%2?"#FF9F45":"#FF3CAC";
+    if(on) g+=`<path d="M60 ${y} H585" stroke="${col}" stroke-width="3" fill="none" class="flow"/>`;
+    else { const y2=108-i*23; g+=`<path d="M60 ${y} C230 ${y2} 380 ${y} 585 ${y2}" stroke="${col}" stroke-width="2" fill="none" opacity=".45" stroke-dasharray="4 5"/>`; }
+    g+=`<text x="22" y="${y+7}" font-size="18" text-anchor="middle">${icons[i]}</text>`;
+  }
+  if(s<5) g+=`<text x="320" y="68" font-size="22" text-anchor="middle" opacity=".8">⚠️</text>`;
+  return `<svg viewBox="0 0 600 126" role="img" aria-label="Role Wars: ${s} von 5 Rollenlinien entwirrt">${g}</svg>`;
+}
+function meadScene(s){
+  const rot=[-24,17,-11,28,-19], dy=[14,-8,18,-12,9]; let g=`<defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A970FF" stop-opacity=".55"/><stop offset=".55" stop-color="#36F5FF" stop-opacity=".25"/><stop offset="1" stop-color="#FF3CAC" stop-opacity=".45"/></linearGradient></defs>`;
+  for(let i=0;i<5;i++){
+    const cx=80+i*110, on=i<s;
+    if(on) g+=`<g><rect x="${cx-42}" y="14" width="84" height="98" fill="url(#mg)" stroke="#A970FF" stroke-width="2"/><line x1="${cx-30}" y1="28" x2="${cx-6}" y2="52" stroke="#F4F1DE" stroke-width="2" opacity=".7"/><circle cx="${cx}" cy="70" r="11" fill="none" stroke="#36F5FF" stroke-width="2"/></g>`;
+    else g+=`<g transform="translate(0 ${dy[i]}) rotate(${rot[i]} ${cx} 63)"><polygon points="${cx-34},20 ${cx+30},30 ${cx+40},96 ${cx-24},108" fill="rgba(169,112,255,.12)" stroke="#5b4a8a" stroke-width="2" stroke-dasharray="5 4"/></g>`;
+  }
+  return `<svg viewBox="0 0 600 126" role="img" aria-label="Mind Mirror: ${s} von 5 Spiegeln ausgerichtet">${g}</svg>`;
+}
+function bossScene(s){
+  const words=["MEAD=SYSTEM?","INTRA≈INTER","PLAY=GAME","ROLLE=ZWANG!","I=REGEL?"]; let g="";
+  const pat=[[1,1,0,1],[0,1,1,1],[1,1,1,0]];
+  for(let i=0;i<5;i++){
+    const x0=24+i*116, on=i<s;
+    if(on){ g+=`<rect x="${x0}" y="18" width="92" height="66" fill="none" stroke="#66FF99" stroke-width="1" stroke-dasharray="3 5" opacity=".5"/><text x="${x0+46}" y="58" font-size="22" text-anchor="middle" fill="#66FF99">✓</text>`; }
+    else {
+      g+=`<g class="${RM?"":"jit"}" style="animation-delay:${i*.3}s">`;
+      pat.forEach((row,r)=>row.forEach((v,c)=>{ if(v) g+=`<rect x="${x0+c*23}" y="${18+r*23}" width="20" height="20" fill="${(r+c+i)%2?"#FF3CAC":"#FF5D73"}" opacity=".85"/>`; }));
+      g+=`</g>`;
+    }
+    g+=`<text x="${x0+46}" y="110" font-size="13" text-anchor="middle" fill="${on?"#66FF99":"#FFE66D"}" font-family="VT323, monospace" style="font-size:15px">${on?"DECODED":esc(words[i])}</text>`;
+  }
+  return `<svg viewBox="0 0 600 126" role="img" aria-label="Final Boss: ${s} von 5 Glitch-Blöcken aufgelöst">${g}</svg>`;
+}
+function practiceScene(s){
+  let g="";
+  for(let i=0;i<5;i++){
+    const x=40+i*110, on=i<s;
+    for(let b=0;b<6;b++) g+=`<rect x="${x}" y="${100-b*15}" width="80" height="11" fill="${on?(b>3?"#36F5FF":"#A970FF"):"#2a2550"}"/>`;
+  }
+  return `<svg viewBox="0 0 600 126" role="img" aria-label="Training: ${s} Skills geladen">${g}</svg>`;
+}
+
+/* ---------- Database, Hilfe, Pause ---------- */
+let dbTab="parsons", dbOpen=-1;
+function openDB(tab, entry){
+  if(tab && D.db[tab]) dbTab=tab;
+  dbOpen = (entry!==undefined && entry!==null && !isNaN(entry)) ? entry : -1;
+  drawDB(); ov.classList.add("open"); ov.scrollTop=0;
+}
+function drawDB(){
+  const tabs=ORDER.map(k=>`<button class="tab ${k===dbTab?"on":""}" data-act="dbtab" data-t="${k}" style="--c:${TH[k].accent}">${k.toUpperCase()}</button>`).join("");
+  const list=D.db[dbTab].map((e,i)=>{
+    const open=i===dbOpen;
+    return `<div class="dbe ${open?"open":""}" style="${open?"border-color:"+TH[dbTab].accent:""}">
+      <button class="dbh" data-act="dbitem" data-i="${i}" aria-expanded="${open}">${open?"▼":"▶"} ${esc(e.term)}</button>
+      ${open?`<div class="dbb"><p><b style="color:${TH[dbTab].accent}">Definition:</b> ${esc(e.def)}</p><p><b style="color:${TH[dbTab].accent}">Beispiel:</b> ${esc(e.ex)}</p>${e.diff?`<p><b style="color:${TH[dbTab].accent}">Abgrenzung:</b> ${esc(e.diff)}</p>`:""}</div>`:""}
+    </div>`;
+  }).join("");
+  ov.innerHTML=`<div class="ovbox">
+    <div class="ovhead"><h2>THEORY DATABASE</h2><button class="btn ghost" data-act="closeov">✕ ${run?"ZURÜCK ZUM SPIEL":"SCHLIESSEN"}</button></div>
+    <div class="term">C:\\SOC85\\${dbTab.toUpperCase()}.DB &gt; <span class="cursor">█</span></div>
+    <div class="tabs">${tabs}</div>
+    <div class="thead" style="color:${TH[dbTab].accent}">${TH[dbTab].person} · ${TH[dbTab].theory}</div>
+    ${list}
+  </div>`;
+}
+function openHelp(){
+  openOv(`<div class="ovbox"><div class="ovhead"><h2>HOW TO PLAY</h2><button class="btn ghost" data-act="closeov">✕ SCHLIESSEN</button></div>
+  <div class="helpbox">
+    <ul>
+      <li><b>Welten:</b> Jede Welt steht für eine Theorie und hat fünf Aufgaben – vom Grundverständnis bis zur Abgrenzung von anderen Theorien. Die nächste Welt wird frei, sobald du die vorherige abgeschlossen hast. Abschließen kannst du jede Welt immer – auch mit Fehlern.</li>
+      <li><b>Antworten:</b> Tippe eine Antwort an und dann auf „Antwort prüfen“. Bei Zuordnungen tippst du erst eine Beschreibung und dann den Begriff.</li>
+      <li><b>Punkte:</b> 100 beim ersten Versuch, 50 beim zweiten. Nach zwei Fehlversuchen erklärt das Spiel die Lösung und du spielst normal weiter. Erster Abschluss einer Welt: +200. Final Boss: +150.</li>
+      <li><b>Hinweis:</b> Der Hinweis-Button kostet keine Punkte.</li>
+      <li><b>Replay:</b> Bei einem Fehler kommt am Ende des Levels eine ähnliche Aufgabe – zum Festigen.</li>
+      <li><b>Database:</b> Alle Fachbegriffe kannst du jederzeit nachschlagen, auch während einer Aufgabe.</li>
+      <li><b>Ränge:</b> ROOKIE → SOCIAL EXPLORER → THEORY HACKER → SOCIOLOGY ACE.</li>
+      <li><b>Kein Zeitdruck.</b> Ton ist standardmäßig aus und wird für keine Aufgabe gebraucht.</li>
+      <li><b>Partnerarbeit:</b> Besprecht jede Antwort, bevor ihr auf „Antwort prüfen“ tippt.</li>
+    </ul>
+    <p class="small">${storageOK?"Dein Spielstand wird nur lokal in diesem Browser auf diesem Gerät gespeichert. Es werden keine Daten übertragen. Löschen kannst du ihn über „Spielstand zurücksetzen“ im Pause-Menü.":"Lokale Speicherung ist in diesem Browser nicht verfügbar. Das Spiel funktioniert trotzdem – dein Fortschritt bleibt erhalten, solange dieser Tab geöffnet ist."}</p>
+  </div></div>`);
+}
+function openPause(){
+  openOv(`<div class="ovbox" style="text-align:center;padding-top:6vh">
+    <h2 class="big" style="margin-bottom:12px">PAUSE</h2>
+    <p class="dim">Deine Aufgabe und dein Punktestand bleiben genau so erhalten.</p>
+    <div class="menu" style="margin:22px auto 0">
+      <button class="btn primary" data-act="closeov">▶ WEITERSPIELEN</button>
+      <button class="btn" data-act="db">▤ THEORY DATABASE</button>
+      <button class="btn" data-act="help">? HOW TO PLAY</button>
+      <button class="btn" data-act="sound" data-sl>${soundLabel()}</button>
+      <button class="btn ghost" data-act="leave">ZUR WELTKARTE</button>
+      <button class="btn ghost" data-act="reset">SPIELSTAND ZURÜCKSETZEN</button>
+    </div></div>`);
+}
+function resetAll(keepSeen){
+  const keep={sound:S.sound,introSeen:S.introSeen,seen:keepSeen?S.seen.slice():[]};
+  S=freshState(); S.sound=keep.sound; S.introSeen=keep.introSeen; S.seen=keep.seen;
+  if(!keepSeen){ try{ localStorage.removeItem(KEY); }catch(e){} }
+  save();
+}
+
+/* ---------- Eingaben ---------- */
+document.addEventListener("click", e=>{
+  const b=e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  const a=b.dataset.act;
+  switch(a){
+    case "start": beep("click"); if(S.introSeen) renderMap(); else renderIntro(); break;
+    case "intro-done": S.introSeen=true; save(); glitch(); renderMap(); break;
+    case "map": if(!free()) return; guard(); closeOv(); renderMap(); break;
+    case "arcade": renderStart(); break;
+    case "world": if(!free()) return; guard(); startWorld(b.dataset.w); break;
+    case "boss": if(!free()) return; guard(); startBoss(); break;
+    case "opt": selOpt(b.dataset.i); break;
+    case "item": selItem(Number(b.dataset.i)); break;
+    case "cat": selCat(b.dataset.c); break;
+    case "check": check(); break;
+    case "hint": showHint(); break;
+    case "next": next(); break;
+    case "db": openDB(run && run.mode==="world" ? cur().theory : null); break;
+    case "dbtab": dbTab=b.dataset.t; dbOpen=-1; drawDB(); break;
+    case "dbitem": { const i=Number(b.dataset.i); dbOpen = dbOpen===i ? -1 : i; drawDB(); break; }
+    case "dbgo": openDB(b.dataset.t, Number(b.dataset.e)); break;
+    case "help": openHelp(); break;
+    case "pause": openPause(); break;
+    case "closeov": closeOv(); break;
+    case "sound": S.sound=!S.sound; save(); refreshSoundButtons(); beep("ok"); break;
+    case "leave": confirmBox("Level verlassen? Bereits erspielte Punkte bleiben erhalten. Das Level startet beim nächsten Mal von vorn.","doleave","JA, ZUR WELTKARTE"); break;
+    case "doleave": closeOv(); renderMap(); break;
+    case "reset": confirmBox("Spielstand komplett zurücksetzen? Punkte, freigeschaltete Welten und Auswertung werden gelöscht.","doreset","JA, ZURÜCKSETZEN"); break;
+    case "newgame": confirmBox("Neues Spiel starten? Dein bisheriger Spielstand wird gelöscht.","doreset","JA, NEU STARTEN"); break;
+    case "doreset": resetAll(false); renderStart(); break;
+    case "results": renderResults(false,0); break;
+    case "again": resetAll(true); glitch(); renderMap(); break;
+    case "weak": if(!free()) return; guard(); startPractice(); break;
+  }
+});
+document.addEventListener("keydown", e=>{
+  if(ov.classList.contains("open")){ if(e.key==="Escape") closeOv(); return; }
+  if(!run) return;
+  const t=cur();
+  if(!run.locked && /^[1-4]$/.test(e.key)){
+    const n=Number(e.key)-1;
+    if((t.type==="mc"||t.type==="compare") && run.order[n]!==undefined) selOpt(run.order[n]);
+    if(t.type==="theory" && ORDER[n]) selOpt(ORDER[n]);
+  }
+  if(e.key==="Enter"){ if(run.locked) next(); else if(!document.getElementById("check").disabled) check(); }
+  if(e.key==="Escape") openPause();
+});
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden) save(); });
+
+/* ---------- Start ---------- */
+stars(); load(); renderStart();
+})();
+</script>
+</body>
+</html>
